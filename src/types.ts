@@ -41,94 +41,36 @@ export interface DomHashOptions {
    * If true, enables resilience features in the hashing process.
    */
   resilience?: boolean;
+  corsProxy?: string;
 }
 
 /**
  * The result of hashing a DOM structure.
  */
 export interface DomHashResult {
-  /**
-   * The computed hash value as a string.
-   */
   hash: string;
-
-  /**
-   * An optional representation of the shape of the DOM structure.
-   */
   shape?: string[];
-
-  /**
-   * Statistics about the hashed DOM structure.
-   */
   stats: {
-    /**
-     * The count of unique HTML tags within the DOM structure.
-     */
     tagCount: number;
-
-    /**
-     * The depth of the DOM tree.
-     */
     depth: number;
   };
-
-  /**
-   * A canonical representation of the DOM structure.
-   */
   canonical: string;
-
-  /**
-   * An optional layout hash if layout-aware hashing is enabled.
-   */
   layoutHash?: string;
-
-  /**
-   * An optional canonical representation of the layout.
-   */
   layoutCanonical?: string;
-
-  /**
-   * An optional representation of the layout shape.
-   */
   layoutShape?: string[];
-
-  /**
-   * An optional score representing the resilience of the hash against changes.
-   */
   resilienceScore?: number;
-
-  /**
-   * An optional breakdown of the resilience score.
-   */
   resilienceBreakdown?: any;
-
-  /**
-   * An optional label describing the resilience level.
-   */
   resilienceLabel?: string;
-
-  /**
-   * An optional emoji representing the resilience status.
-   */
   resilienceEmoji?: string;
+  structuralScore?: number;
+  structuralBreakdown?: any;
+  structuralLabel?: string;
+  structuralEmoji?: string;
+  structureTree?: any;
 }
 
-/**
- * Represents a node in the structure of a DOM element.
- */
 export interface StructureNode {
-  /**
-   * The HTML tag name of the node.
-   */
   tag: string;
-
-  /**
-   * An array of attribute names associated with the node.
-   */
   attributes: string[];
-
-  /**
-   * An array of child nodes that are also StructureNode instances.
-   */
   children: StructureNode[];
 }

@@ -1,11 +1,14 @@
-// src/index.ts
-
 import { parseInput } from './core/parser';
 import { canonicalize } from './core/canonicalizer';
 import { hashStructure } from './core/hasher';
-import { computeResilienceScore, extractLayoutFeatures, serializeLayoutFeatures } from './core/layout';
+import {
+  computeResilienceScore,
+  extractLayoutFeatures,
+  serializeLayoutFeatures,
+  computeStructuralScore,
+} from './core/layout';
 import { DomHashOptions, DomHashResult } from './types';
-import * as compare from './compare/metrics';
+import { extractDOMStructureTree } from './core/structureTree';
 
 /**
  * Generate a DOM hash from input HTML, DOM node, or URL.
@@ -13,8 +16,11 @@ import * as compare from './compare/metrics';
  * @param options - Configuration options
  * @returns A promise resolving to a DomHashResult
  */
-export async function domhash(input: string | URL | Document | Element, options: DomHashOptions = {}): Promise<DomHashResult> {
-  const dom = await parseInput(input);
+export async function domhash(
+  input: string | URL | Document | Element,
+  options: DomHashOptions = {}
+): Promise<DomHashResult> {
+  const dom = await parseInput(input, options);
   const structure = canonicalize(dom, options);
   const hash = await hashStructure(structure.canonical, options.algorithm || 'sha256');
 
@@ -22,6 +28,8 @@ export async function domhash(input: string | URL | Document | Element, options:
   const layoutCanonical = layout ? serializeLayoutFeatures(layout) : '';
   const layoutHash = layout ? await hashStructure(layoutCanonical, options.algorithm || 'sha256') : undefined;
   const layoutShape = layout ? layout.map(f => `${f.tag}:${f.display}`) : undefined;
+
+  const structureTree = options.shapeVector ? extractDOMStructureTree(dom) : undefined;
 
   const base = {
     hash,
@@ -31,8 +39,15 @@ export async function domhash(input: string | URL | Document | Element, options:
       depth: structure.depth,
     },
     canonical: structure.canonical,
-    ...(options.layoutAware ? { layoutHash, layoutCanonical, layoutShape } : {})
+    ...(options.layoutAware ? { layoutHash, layoutCanonical, layoutShape } : {}),
+    ...(structureTree ? { structureTree } : {})
   };
+
+  const structural = computeStructuralScore(structure.shape || []);
+  (base as any).structuralScore = structural.score;
+  (base as any).structuralBreakdown = structural.breakdown;
+  (base as any).structuralLabel = structural.label;
+  (base as any).structuralEmoji = structural.emoji;
 
   if (options.resilience) {
     const res = computeResilienceScore(structure.shape || [], layoutShape);
@@ -41,7 +56,7 @@ export async function domhash(input: string | URL | Document | Element, options:
       resilienceScore: res.score,
       resilienceBreakdown: res.breakdown,
       resilienceLabel: res.label,
-      resilienceEmoji: res.emoji
+      resilienceEmoji: res.emoji,
     };
   }
 
