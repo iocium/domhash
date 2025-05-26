@@ -8,7 +8,7 @@
     "build": "tsup",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "start": "node dist/cli.js"
+    "docs": "typedoc"
   },
   "bin": {
     "domhash": "dist/cli.js"
@@ -27,7 +27,8 @@
     "@noble/hashes": "^1.3.0",
     "commander": "^14.0.0",
     "diff": "^8.0.2",
-    "linkedom": "^0.18.10"
+    "linkedom": "^0.18.10",
+    "typedoc": "^0.28.4"
   },
   "devDependencies": {
     "@types/bun": "^1.2.14",

@@ -1,6 +1,42 @@
 import { DomHashComparisonResult } from './index';
 import pkg from '../../package.json';
 
+/**
+ * Generates an HTML representation of the DOM hash comparison results.
+ *
+ * This function takes a `DomHashComparisonResult` object and formats it into a 
+ * well-structured HTML document. The resulting HTML includes details such as 
+ * SHA hashes, structural similarity percentages, and any structural differences 
+ * found between two DOM representations. It is useful for visually presenting 
+ * the comparison results in a web browser.
+ *
+ * @param result - An object containing the results of the DOM hash comparison.
+ *                 It should include the following properties:
+ *                 - `hashA`: The SHA hash of the first DOM representation.
+ *                 - `hashB`: The SHA hash of the second DOM representation.
+ *                 - `similarity`: A number representing the structural similarity 
+ *                   between the two DOMs (0 to 1).
+ *                 - `shapeSimilarity`: (Optional) A number representing the shape 
+ *                   similarity between the two DOMs (0 to 1).
+ *                 - `diff`: An array of strings representing the structural 
+ *                   differences, where lines starting with '+' indicate additions 
+ *                   and lines starting with '-' indicate deletions.
+ * @returns A string containing the complete HTML markup for displaying the 
+ *          DOM hash comparison results.
+ *
+ * @example
+ * ```typescript
+ * const result: DomHashComparisonResult = {
+ *   hashA: 'abc123',
+ *   hashB: 'def456',
+ *   similarity: 0.95,
+ *   shapeSimilarity: 0.85,
+ *   diff: ['+ New element', '- Removed element']
+ * };
+ * const htmlOutput = formatAsHTML(result);
+ * console.log(htmlOutput); // Outputs the generated HTML string
+ * ```
+ */
 export function formatAsHTML(result: DomHashComparisonResult): string {
   return `<!DOCTYPE html>
 <html>

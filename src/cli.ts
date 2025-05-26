@@ -109,6 +109,25 @@ program
   }
 })();
 
+/**
+ * Parses a comma-separated string of attributes into an array of trimmed strings.
+ *
+ * This function takes a string containing multiple attributes separated by commas,
+ * trims whitespace from each attribute, and filters out any empty values. 
+ * It is useful for converting a list of attributes provided as a single string
+ * into a more manageable array format.
+ *
+ * @param val - A comma-separated string of attributes to be parsed.
+ *              Each attribute can have leading or trailing whitespace.
+ * @returns An array of strings, where each string is a trimmed attribute 
+ *          from the input. Empty values are excluded from the output array.
+ * 
+ * @example
+ * ```typescript
+ * const attrs = parseAttrList("  attr1,   attr2 ,attr3,,  ");
+ * console.log(attrs); // Outputs: ["attr1", "attr2", "attr3"]
+ * ```
+ */
 function parseAttrList(val: string): string[] {
   return val.split(',').map(v => v.trim()).filter(Boolean);
 }
