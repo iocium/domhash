@@ -85,7 +85,6 @@ console.log(result.shape);             // tag structure vector
 - <p></p>
 + <span></span>
 ```
-```
 
 ---
 
