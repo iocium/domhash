@@ -88,6 +88,8 @@ console.log(result.shape);             // tag structure vector
 
 ---
 
-## License
+## © License
 
-MIT © 2025 [@iocium](https://github.com/iocium)
+MIT.
+
+Built by [iocium](https://github.com/iocium) with care.
