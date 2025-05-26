@@ -71,7 +71,7 @@ console.log(result.shape);             // tag structure vector
 
 ## Output Example (Markdown)
 
-```markdown
+```text
 ### DOM Hash Comparison Report
 
 - SHA A: `abc123`
