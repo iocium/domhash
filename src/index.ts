@@ -49,4 +49,5 @@ export async function domhash(input: string | URL | Document | Element, options:
 }
 
 export * from './compare/metrics';
-export { computeResilienceScore } from './core/layout';
+export { computeResilienceScore, ResilienceBreakdown } from './core/layout';
+export type { DomHashOptions, DomHashResult, StructureNode } from './types';
