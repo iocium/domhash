@@ -61,6 +61,10 @@ export interface DomHashOptions {
   shapeVector?: boolean;
   layoutAware?: boolean;
   resilience?: boolean;
+  /**
+   * Optional CORS proxy URL prefix to prepend when fetching external resources.
+   */
+  corsProxy?: string;
 }
 
 /**

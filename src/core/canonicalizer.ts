@@ -12,6 +12,8 @@ export function canonicalize(root: Element, options: DomHashOptions = {}): Canon
   let tagCount = 0;
   let maxDepth = 0;
 
+  // prepare attribute inclusion list (lowercased) if provided
+  const includeAttrs = options.includeAttributes?.map(a => a.toLowerCase()) || [];
   function traverse(node: Element, depth: number): StructureNode {
     const tag = node.tagName.toLowerCase();
     shape.push(tag);
@@ -21,8 +23,13 @@ export function canonicalize(root: Element, options: DomHashOptions = {}): Canon
     const rawAttrs = Array.from(node.attributes)
       .map(attr => attr.name.toLowerCase())
       .filter(name => {
-        if (!options.includeDataAndAriaAttributes) {
-          if (name.startsWith('data-') || name.startsWith('aria-')) return false;
+        // optionally exclude data-* and aria-* attributes
+        if (!options.includeDataAndAriaAttributes && (name.startsWith('data-') || name.startsWith('aria-'))) {
+          return false;
+        }
+        // if includeAttributes list is provided, only include those attributes
+        if (includeAttrs.length > 0) {
+          return includeAttrs.includes(name);
         }
         return true;
       })

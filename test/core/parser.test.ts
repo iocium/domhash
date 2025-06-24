@@ -22,4 +22,25 @@ describe('parseInput', () => {
   it('throws for unsupported input types', async () => {
     await expect(parseInput(123 as any)).rejects.toThrow();
   });
+  
+  describe('fetchWithProxy HTTP errors', () => {
+    let originalFetch: any;
+    beforeAll(() => {
+      originalFetch = (global as any).fetch;
+      (global as any).fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: jest.fn(),
+      });
+    });
+    afterAll(() => {
+      (global as any).fetch = originalFetch;
+    });
+    it('throws an error when fetch response is not ok', async () => {
+      await expect(parseInput('http://example.com')).rejects.toThrow(
+        'Failed to fetch http://example.com: 404 Not Found'
+      );
+    });
+  });
 });

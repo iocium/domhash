@@ -4,6 +4,11 @@ module.exports = {
   testEnvironment: 'jsdom',
   coverageDirectory: 'coverage',
   coveragePathIgnorePatterns: [
-  "/node_modules/"
-  ]
+    "/node_modules/"
+  ],
+  // store cache inside project to avoid /tmp permission issues
+  cacheDirectory: "<rootDir>/node_modules/.cache/jest",
+  // ignore built artifacts
+  modulePathIgnorePatterns: ["<rootDir>/dist/"],
+  testPathIgnorePatterns: ["<rootDir>/dist/"],
 };

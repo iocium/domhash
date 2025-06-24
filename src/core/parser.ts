@@ -7,6 +7,9 @@ export async function parseInput(input: InputSource, options: DomHashOptions = {
   const fetchWithProxy = async (url: string) => {
     const finalUrl = options.corsProxy ? options.corsProxy + url : url;
     const res = await fetch(finalUrl);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch ${finalUrl}: ${res.status} ${res.statusText}`);
+    }
     return await res.text();
   };
 

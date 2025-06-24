@@ -1,4 +1,5 @@
 import { hashStructure } from '../../src/core/hasher';
+import { TextEncoder } from 'util';
 import murmurhash3 from '../../src/core/murmur3';
 import { blake3 } from '@noble/hashes/blake3';
 import { createHash } from 'crypto';
@@ -53,5 +54,24 @@ describe('hashStructure', () => {
     const expected = expectedNum.toString(16);
     const result = await hashStructure(text, 'minhash');
     expect(result).toBe(expected);
+  });
+  
+  describe('sha256 fallback when Web Crypto is unavailable', () => {
+    let originalCrypto: any;
+    beforeAll(() => {
+      originalCrypto = (global as any).crypto;
+      // remove Web Crypto subtle to force Node.js fallback
+      (global as any).crypto = {};
+    });
+    afterAll(() => {
+      (global as any).crypto = originalCrypto;
+    });
+    it('uses Node.js crypto#createHash when crypto.subtle is missing', async () => {
+      const text = 'fallback-test';
+      const { createHash } = await import('crypto');
+      const expected = createHash('sha256').update(text, 'utf8').digest('hex');
+      const result = await hashStructure(text, 'sha256');
+      expect(result).toBe(expected);
+    });
   });
 });

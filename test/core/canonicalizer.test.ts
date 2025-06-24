@@ -35,4 +35,18 @@ describe('canonicalize', () => {
     const result = canonicalize(div);
     expect(result.canonical).toBe('<div a z></div>');
   });
+  
+  it('includes only specified attributes when includeAttributes is provided', () => {
+    const div = document.createElement('div');
+    div.setAttribute('id', 'one');
+    div.setAttribute('class', 'two');
+    div.setAttribute('data-foo', 'bar');
+    // include only class and data-foo; enable data/aria inclusion
+    const result = canonicalize(div, {
+      includeAttributes: ['class', 'data-foo'],
+      includeDataAndAriaAttributes: true,
+    });
+    // attribute names only, sorted
+    expect(result.canonical).toBe('<div class data-foo></div>');
+  });
 });

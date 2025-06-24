@@ -13,7 +13,7 @@ describe('extractLayoutFeatures and serializeLayoutFeatures', () => {
       (global as any).getComputedStyle = originalGetComputedStyle;
     });
 
-    it('extracts display from inline style attributes', () => {
+    it('extracts display from inline style attributes and serializes correctly', () => {
       const div = document.createElement('div');
       div.setAttribute('style', 'display:inline-block');
       const span = document.createElement('span');
@@ -22,11 +22,27 @@ describe('extractLayoutFeatures and serializeLayoutFeatures', () => {
 
       const features = extractLayoutFeatures(div);
       expect(features).toEqual([
-        { tag: 'div', display: 'inline-block' },
-        { tag: 'span', display: 'flex' },
+        {
+          tag: 'div',
+          display: 'inline-block',
+          visibility: 'visible',
+          opacity: '1',
+          position: 'static',
+          isHidden: false,
+        },
+        {
+          tag: 'span',
+          display: 'flex',
+          visibility: 'visible',
+          opacity: '1',
+          position: 'static',
+          isHidden: false,
+        },
       ]);
       const serialized = serializeLayoutFeatures(features);
-      expect(serialized).toBe('div:inline-block,span:flex');
+      expect(serialized).toBe(
+        'div:inline-block/static/visible/1/V,span:flex/static/visible/1/V'
+      );
     });
   });
 });

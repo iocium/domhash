@@ -6,8 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup",
-    "test": "jest",
-    "test:coverage": "jest --coverage",
+    "test": "jest --runInBand --no-cache",
+    "test:coverage": "jest --runInBand --coverage --no-cache",
     "docs": "typedoc"
   },
   "bin": {

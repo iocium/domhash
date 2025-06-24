@@ -27,10 +27,10 @@ export function extractLayoutFeatures(root: Element): LayoutFeature[] {
       } catch {}
     } else if ('getAttribute' in el && typeof el.getAttribute === 'function') {
       const style = el.getAttribute('style') || '';
-      display = style.match(/display:\s*(\w+)/)?.[1] || display;
+      display = style.match(/display:\s*([\w-]+)/)?.[1] || display;
       visibility = style.match(/visibility:\s*(\w+)/)?.[1] || visibility;
       opacity = style.match(/opacity:\s*([\d.]+)/)?.[1] || opacity;
-      position = style.match(/position:\s*(\w+)/)?.[1] || position;
+      position = style.match(/position:\s*([\w-]+)/)?.[1] || position;
     } else if ('display' in el) {
       display = (el as any).display || display;
     }
@@ -133,9 +133,10 @@ export function computeStructuralScore(structure: string[]): StructuralBreakdown
 export function computeResilienceScore(structure: string[], layout?: string[]): ResilienceBreakdown {
   const tagVariety = new Set(structure).size;
   const tagPenalty = 1 - Math.min(tagVariety / structure.length, 1);
-  const depthPenalty = structure.length > 0 ? Math.min(1, structure.length / 100) : 0;
-  const layoutVariety = layout ? new Set(layout.map(d => d.split(':')[1])).size : 0;
-  const layoutPenalty = layout ? 1 - Math.min(layoutVariety / layout.length, 1) : 0;
+  const depthPenalty = structure.length > 0 ? Math.min(1, structure.length / 200) : 0;
+  const hasLayout = Array.isArray(layout) && layout.length > 0;
+  const layoutVariety = hasLayout ? new Set(layout.map(d => d.split(':')[1])).size : 0;
+  const layoutPenalty = hasLayout ? 1 - Math.min(layoutVariety / layout.length, 1) : 0;
 
   const penalties = [tagPenalty, depthPenalty, layoutPenalty];
   const avgPenalty = penalties.reduce((a, b) => a + b, 0) / penalties.length;

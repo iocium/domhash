@@ -16,9 +16,13 @@ export async function hashStructure(input: string, algo: 'sha256' | 'murmur3' | 
       return minhash(input).toString(16);
     case 'sha256':
     default:
+      // attempt Web Crypto API first, fallback to Node.js crypto
       if (globalThis.crypto?.subtle) {
         const hash = await crypto.subtle.digest('SHA-256', data);
         return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+      } else if (typeof require === 'function') {
+        const { createHash } = await import('crypto');
+        return createHash('sha256').update(input, 'utf8').digest('hex');
       }
       throw new Error('SHA-256 hashing is not available in this environment');
   }
