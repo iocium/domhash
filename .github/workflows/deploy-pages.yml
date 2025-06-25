@@ -25,6 +25,10 @@ jobs:
       - name: Build docs
         run: npm run docs
 
+      - name: Copy demo page
+        run: |
+          cp demo/index.html docs/index.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 

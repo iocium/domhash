@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>domhash Browser Demo</title>
+  <style>
+    body { margin:0; font-family:Arial, sans-serif; background:#f5f5f5; }
+    header { background:#2f3b52; color:#fff; padding:1rem; text-align:center; }
+    .container { max-width:800px; margin:2rem auto; background:#fff; padding:1.5rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+    .controls { display:flex; flex-wrap:wrap; gap:1rem; align-items:center; margin-bottom:1rem; }
+    label { flex:1 0 auto; margin-bottom:0.25rem; }
+    select, button, textarea { font-size:1rem; border:1px solid #ccc; border-radius:4px; }
+    select, input[type="text"] { padding:0.5rem; }
+    button { padding:0.5rem 1rem; background:#2f3b52; color:#fff; cursor:pointer; }
+    button:hover { background:#1f2739; }
+    textarea { width:100%; padding:0.75rem; font-family:monospace; resize:vertical; }
+    .output { white-space:pre-wrap; background:#eee; padding:1rem; border-radius:4px; min-height:120px; margin-top:1rem; overflow:auto; }
+    #inputB-container { display:none; }
+  </style>
+</head>
+<body>
+  <header><h1>domhash Browser Demo</h1></header>
+  <div class="container">
+    <div class="controls">
+      <label for="command">Command:</label>
+      <select id="command">
+        <option value="hash">hash</option>
+        <option value="compare">compare</option>
+        <option value="diff">diff</option>
+        <option value="shape">shape</option>
+        <option value="layout">layout</option>
+        <option value="resilience">resilience</option>
+      </select>
+      <button id="run">Run</button>
+    </div>
+    <label for="inputA">Input A (HTML):</label>
+    <textarea id="inputA" rows="6">&lt;div&gt;&lt;span&gt;Hello&lt;/span&gt;&lt;/div&gt;</textarea>
+    <div id="inputB-container">
+      <label for="inputB">Input B (HTML):</label>
+      <textarea id="inputB" rows="6"></textarea>
+    </div>
+    <label for="options">Options (JSON):</label>
+    <textarea id="options" rows="3">{}</textarea>
+    <div class="output" id="output">Output will appear here...</div>
+  </div>
+  <script type="module">
+    import { domhash, compareStructures, compareShapeJaccard, compareShapeLCS, compareShapeCosine, compareTreeEditDistance, getStructuralDiff } from 'https://unpkg.com/@iocium/domhash/dist/browser/index.mjs';
+
+    const commandEl = document.getElementById('command');
+    const runBtn = document.getElementById('run');
+    const inputAEl = document.getElementById('inputA');
+    const inputBEl = document.getElementById('inputB');
+    const inputBContainer = document.getElementById('inputB-container');
+    const optionsEl = document.getElementById('options');
+    const outputEl = document.getElementById('output');
+
+    commandEl.addEventListener('change', () => {
+      inputBContainer.style.display = ['compare', 'diff'].includes(commandEl.value) ? 'block' : 'none';
+    });
+
+    runBtn.addEventListener('click', async () => {
+      const cmd = commandEl.value;
+      const htmlA = inputAEl.value;
+      const htmlB = inputBEl.value;
+      let opts = {};
+      try { opts = JSON.parse(optionsEl.value); } catch { outputEl.textContent = 'Invalid JSON in options'; return; }
+      outputEl.textContent = 'Running...';
+      try {
+        let result;
+        switch (cmd) {
+          case 'hash':
+            result = await domhash(htmlA, opts);
+            break;
+          case 'compare': {
+            const resA = await domhash(htmlA, opts);
+            const resB = await domhash(htmlB, opts);
+            const structural = compareStructures(resA.canonical, resB.canonical);
+            let shapeSimilarity;
+            if (resA.shape && resB.shape) shapeSimilarity = compareShapeJaccard(resA.shape, resB.shape);
+            const diff = getStructuralDiff(resA.canonical, resB.canonical);
+            result = { hashA: resA.hash, hashB: resB.hash, structural, shapeSimilarity, diff };
+            break;
+          }
+          case 'diff': {
+            const resA = await domhash(htmlA, opts);
+            const resB = await domhash(htmlB, opts);
+            result = getStructuralDiff(resA.canonical, resB.canonical);
+            break;
+          }
+          case 'shape': {
+            const res = await domhash(htmlA, { ...opts, shapeVector: true });
+            result = res.shape;
+            break;
+          }
+          case 'layout': {
+            const res = await domhash(htmlA, { ...opts, layoutAware: true });
+            result = { layoutShape: res.layoutShape, layoutHash: res.layoutHash };
+            break;
+          }
+          case 'resilience': {
+            const res = await domhash(htmlA, { ...opts, layoutAware: true, resilience: true });
+            result = { resilienceScore: res.resilienceScore, resilienceBreakdown: res.resilienceBreakdown, resilienceEmoji: res.resilienceEmoji, resilienceLabel: res.resilienceLabel };
+            break;
+          }
+        }
+        outputEl.textContent = JSON.stringify(result, null, 2);
+      } catch (err) {
+        outputEl.textContent = 'Error: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

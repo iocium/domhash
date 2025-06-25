@@ -1,0 +1,11 @@
+{
+  "entryPoints": [
+    "src/index.ts",
+    "src/cli.ts"
+  ],
+  "out": "docs/api",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "includeVersion": true,
+  "tsconfig": "./tsconfig.json"
+}
