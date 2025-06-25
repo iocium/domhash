@@ -14,137 +14,262 @@ import pkg from '../package.json';
 
 const program = new Command();
 
+program.name('domhash').version(pkg.version);
+
+// Define 'hash' subcommand
 program
-  .name('domhash')
-  .version(pkg.version)
-  .argument('<input>', 'HTML string, file path, or URL')
+  .command('hash <input>')
+  .description('Compute hash of a DOM input')
   .option('-i, --include-attrs <attrs>', 'Comma-separated list of attributes to include', parseAttrList)
-  .option('-a, --algorithm <type>', 'Hashing algorithm: sha256, murmur3, blake3, simhash, minhash (default: sha256)', 'sha256')
+  .option('-a, --algorithm <type>', 'Hashing algorithm: sha256, murmur3, blake3, simhash, minhash', 'sha256')
   .option('-s, --shape-vector', 'Output compressed shape vector (run-length encoded)', false)
-  .option('-m, --shape-metric <type>', 'Shape (and layout) similarity metric: jaccard (default), lcs, cosine, ted', 'jaccard')
   .option('-l, --layout-aware', 'Enable layout-aware hashing', false)
   .option('-r, --resilience', 'Output resilience score with detailed penalties', false)
-  .option('-c, --compare-with <inputB>', 'Second input (HTML string, file path, or URL) to compare against')
-  .option('-d, --diff', 'Show structural diff between inputs', false)
-  .option('-o, --output <format>', 'Output format: json, markdown, html')
-  .parse();
+  .action(async (...args) => {
+    const command = args[args.length - 1];
+    const opts = command.opts();
+    const input = args[0];
+    try {
+      const source = await readFile(input);
+      const result = await domhash(source, {
+        algorithm: opts.algorithm,
+        includeAttributes: opts.includeAttrs,
+        shapeVector: opts.shapeVector,
+        layoutAware: opts.layoutAware,
+        resilience: opts.resilience
+      });
 
-(async () => {
-  const opts = program.opts();
-  const [inputA] = program.args;
-
-  try {
-    const sourceA = await readFile(inputA);
-    const resultA = await domhash(sourceA, {
-      algorithm: opts.algorithm,
-      includeAttributes: opts.includeAttrs,
-      shapeVector: opts.shapeVector,
-      layoutAware: opts.layoutAware,
-      resilience: opts.resilience
-    });
-
-    if (!opts.compareWith) {
-      console.log('Hash:', resultA.hash);
-      if (opts.shapeVector && resultA.shape) {
-        console.log('Shape:', JSON.stringify(resultA.shape));
+      console.log('Hash:', result.hash);
+      if (opts.shapeVector && result.shape) {
+        console.log('Shape:', JSON.stringify(result.shape));
       }
-      if (opts.layoutAware && resultA.layoutShape) {
-        console.log('Layout Shape:', JSON.stringify(resultA.layoutShape));
-        console.log('Layout Hash:', resultA.layoutHash);
+      if (opts.layoutAware && result.layoutShape) {
+        console.log('Layout Shape:', JSON.stringify(result.layoutShape));
+        console.log('Layout Hash:', result.layoutHash);
       }
-      if (opts.resilience && resultA.resilienceScore !== undefined) {
-        console.log(`Resilience: ${resultA.resilienceEmoji} ${resultA.resilienceLabel} (${(resultA.resilienceScore * 100).toFixed(2)}%)`);
+      if (opts.resilience && result.resilienceScore !== undefined) {
+        console.log(`Resilience: ${result.resilienceEmoji} ${result.resilienceLabel} (${(result.resilienceScore * 100).toFixed(2)}%)`);
         console.log('Breakdown:', {
-          tagPenalty: (resultA.resilienceBreakdown?.tagPenalty * 100).toFixed(1) + '%',
-          depthPenalty: (resultA.resilienceBreakdown?.depthPenalty * 100).toFixed(1) + '%',
-          layoutPenalty: (resultA.resilienceBreakdown?.layoutPenalty * 100).toFixed(1) + '%'
+          tagPenalty: (result.resilienceBreakdown?.tagPenalty * 100).toFixed(1) + '%',
+          depthPenalty: (result.resilienceBreakdown?.depthPenalty * 100).toFixed(1) + '%',
+          layoutPenalty: (result.resilienceBreakdown?.layoutPenalty * 100).toFixed(1) + '%'
         });
       }
-      return;
+    } catch (err: any) {
+      console.error('Error:', err.message);
+      process.exit(1);
     }
+  });
 
-    const sourceB = await readFile(opts.compareWith);
-    const resultB = await domhash(sourceB, {
-      algorithm: opts.algorithm,
-      includeAttributes: opts.includeAttrs,
-      shapeVector: opts.shapeVector,
-      layoutAware: opts.layoutAware
-    });
+// Define 'compare' subcommand
+program
+  .command('compare <inputA> <inputB>')
+  .description('Compare two DOM inputs')
+  .option('-i, --include-attrs <attrs>', 'Comma-separated list of attributes to include', parseAttrList)
+  .option('-a, --algorithm <type>', 'Hashing algorithm: sha256, murmur3, blake3, simhash, minhash', 'sha256')
+  .option('-s, --shape-vector', 'Output compressed shape vector (run-length encoded)', false)
+  .option('-l, --layout-aware', 'Enable layout-aware hashing', false)
+  .option('-m, --shape-metric <type>', 'Shape similarity metric: jaccard (default), lcs, cosine, ted', 'jaccard')
+  .option('-d, --diff', 'Show structural diff between inputs', false)
+  .option('-o, --output <format>', 'Output format: json, markdown, html')
+  .action(async (...args) => {
+    const command = args[args.length - 1];
+    const opts = command.opts();
+    const inputA = args[0];
+    const inputB = args[1];
+    try {
+      const sourceA = await readFile(inputA);
+      const resultA = await domhash(sourceA, {
+        algorithm: opts.algorithm,
+        includeAttributes: opts.includeAttrs,
+        shapeVector: opts.shapeVector,
+        layoutAware: opts.layoutAware
+      });
+      const sourceB = await readFile(inputB);
+      const resultB = await domhash(sourceB, {
+        algorithm: opts.algorithm,
+        includeAttributes: opts.includeAttrs,
+        shapeVector: opts.shapeVector,
+        layoutAware: opts.layoutAware
+      });
 
-    const structural = compareStructures(resultA.canonical, resultB.canonical);
-    let shapeSimilarity: number | undefined;
-    if (resultA.shape && resultB.shape) {
-      switch (opts.shapeMetric) {
-        case 'jaccard':
-          shapeSimilarity = compareShapeJaccard(resultA.shape, resultB.shape);
-          break;
-        case 'lcs':
-          shapeSimilarity = compareShapeLCS(resultA.shape, resultB.shape);
-          break;
-        case 'cosine':
-          shapeSimilarity = compareShapeCosine(resultA.shape, resultB.shape);
-          break;
-        case 'ted':
-          shapeSimilarity = compareTreeEditDistance(resultA.shape, resultB.shape);
-          break;
-        default:
-          throw new Error(`Unknown shape similarity metric: ${opts.shapeMetric}`);
+      const structural = compareStructures(resultA.canonical, resultB.canonical);
+      let shapeSimilarity: number | undefined;
+      if (resultA.shape && resultB.shape) {
+        switch (opts.shapeMetric) {
+          case 'jaccard':
+            shapeSimilarity = compareShapeJaccard(resultA.shape, resultB.shape);
+            break;
+          case 'lcs':
+            shapeSimilarity = compareShapeLCS(resultA.shape, resultB.shape);
+            break;
+          case 'cosine':
+            shapeSimilarity = compareShapeCosine(resultA.shape, resultB.shape);
+            break;
+          case 'ted':
+            shapeSimilarity = compareTreeEditDistance(resultA.shape, resultB.shape);
+            break;
+          default:
+            throw new Error(`Unknown shape similarity metric: ${opts.shapeMetric}`);
+        }
       }
-    } else {
-      shapeSimilarity = undefined;
-    }
 
-    const comparison = {
-      hashA: resultA.hash,
-      hashB: resultB.hash,
-      similarity: structural,
-      shapeSimilarity,
-      diff: opts.diff ? getStructuralDiff(resultA.canonical, resultB.canonical) : undefined
-    };
-
-    if (opts.layoutAware && resultA.layoutShape && resultB.layoutShape) {
-      const layoutSim = compareLayoutVectors(
-        resultA.layoutShape,
-        resultB.layoutShape,
-        opts.shapeMetric
-      );
-      const labelMap: Record<string, string> = {
-        jaccard: 'Jaccard',
-        lcs: 'LCS',
-        cosine: 'Cosine',
-        ted: 'Tree Edit Distance'
+      const comparison = {
+        hashA: resultA.hash,
+        hashB: resultB.hash,
+        similarity: structural,
+        shapeSimilarity,
+        diff: opts.diff ? getStructuralDiff(resultA.canonical, resultB.canonical) : undefined
       };
-      const label = labelMap[opts.shapeMetric] || opts.shapeMetric;
-      console.log(`Layout similarity (${label}):`, (layoutSim * 100).toFixed(2) + '%');
-    }
 
-    if (opts.output) {
-      console.log(formatResult(comparison, opts.output));
-    } else {
-      console.log('Structural similarity:', (structural * 100).toFixed(2) + '%');
-      if (shapeSimilarity !== undefined) {
-        const labelMap: Record<string,string> = {
+      if (opts.layoutAware && resultA.layoutShape && resultB.layoutShape) {
+        const layoutSim = compareLayoutVectors(resultA.layoutShape, resultB.layoutShape, opts.shapeMetric);
+        const labelMap: Record<string, string> = {
           jaccard: 'Jaccard',
           lcs: 'LCS',
           cosine: 'Cosine',
           ted: 'Tree Edit Distance'
         };
         const label = labelMap[opts.shapeMetric] || opts.shapeMetric;
-        console.log(`Shape similarity (${label}):`, (shapeSimilarity * 100).toFixed(2) + '%');
+        console.log(`Layout similarity (${label}):`, (layoutSim * 100).toFixed(2) + '%');
       }
-      if (opts.diff && comparison.diff) {
-        console.log('\nStructural Diff:');
-        for (const line of comparison.diff) {
-          console.log(line);
+
+      if (opts.output) {
+        console.log(formatResult(comparison, opts.output));
+      } else {
+        console.log('Structural similarity:', (structural * 100).toFixed(2) + '%');
+        if (shapeSimilarity !== undefined) {
+          const labelMap: Record<string,string> = {
+            jaccard: 'Jaccard',
+            lcs: 'LCS',
+            cosine: 'Cosine',
+            ted: 'Tree Edit Distance'
+          };
+          const label = labelMap[opts.shapeMetric] || opts.shapeMetric;
+          console.log(`Shape similarity (${label}):`, (shapeSimilarity * 100).toFixed(2) + '%');
+        }
+        if (opts.diff && comparison.diff) {
+          console.log('\nStructural Diff:');
+          for (const line of comparison.diff) {
+            console.log(line);
+          }
         }
       }
+    } catch (err: any) {
+      console.error('Error:', err.message);
+      process.exit(1);
     }
+  });
 
-  } catch (err: any) {
-    console.error('Error:', err.message);
-    process.exit(1);
-  }
-})();
+// Define 'diff' subcommand
+program
+  .command('diff <inputA> <inputB>')
+  .description('Show structural differences between two DOM inputs')
+  .option('-i, --include-attrs <attrs>', 'Comma-separated list of attributes to include', parseAttrList)
+  .action(async (...args: any[]) => {
+    const command = args[args.length - 1];
+    const [inputA, inputB] = args as [string, string, any];
+    const opts = command.opts();
+    try {
+      const sourceA = await readFile(inputA);
+      const resultA = await domhash(sourceA, { includeAttributes: opts.includeAttrs });
+      const sourceB = await readFile(inputB);
+      const resultB = await domhash(sourceB, { includeAttributes: opts.includeAttrs });
+      const diff = getStructuralDiff(resultA.canonical, resultB.canonical);
+      for (const line of diff) {
+        console.log(line);
+      }
+    } catch (err: any) {
+      console.error('Error:', err.message);
+      process.exit(1);
+    }
+  });
+
+// Define 'shape' subcommand
+program
+  .command('shape <input>')
+  .description('Output compressed shape vector of a DOM input')
+  .option('-i, --include-attrs <attrs>', 'Comma-separated list of attributes to include', parseAttrList)
+  .action(async (...args: any[]) => {
+    const command = args[args.length - 1];
+    const [input] = args as [string, any];
+    const opts = command.opts();
+    try {
+      const source = await readFile(input);
+      const result = await domhash(source, { includeAttributes: opts.includeAttrs, shapeVector: true });
+      if (result.shape) {
+        console.log(JSON.stringify(result.shape));
+      } else {
+        console.error('No shape vector available');
+      }
+    } catch (err: any) {
+      console.error('Error:', err.message);
+      process.exit(1);
+    }
+  });
+
+// Define 'layout' subcommand
+program
+  .command('layout <input>')
+  .description('Output layout shape vector and hash of a DOM input')
+  .option('-i, --include-attrs <attrs>', 'Comma-separated list of attributes to include', parseAttrList)
+  .option('-a, --algorithm <type>', 'Hashing algorithm to use for layout hash', 'sha256')
+  .action(async (...args: any[]) => {
+    const command = args[args.length - 1];
+    const [input] = args as [string, any];
+    const opts = command.opts();
+    try {
+      const source = await readFile(input);
+      const result = await domhash(source, {
+        algorithm: opts.algorithm,
+        includeAttributes: opts.includeAttrs,
+        layoutAware: true
+      });
+      if (result.layoutShape) {
+        console.log('Layout Shape:', JSON.stringify(result.layoutShape));
+      }
+      if (result.layoutHash) {
+        console.log('Layout Hash:', result.layoutHash);
+      }
+    } catch (err: any) {
+      console.error('Error:', err.message);
+      process.exit(1);
+    }
+  });
+
+// Define 'resilience' subcommand
+program
+  .command('resilience <input>')
+  .description('Output resilience score and breakdown of a DOM input')
+  .option('-i, --include-attrs <attrs>', 'Comma-separated list of attributes to include', parseAttrList)
+  .action(async (...args: any[]) => {
+    const command = args[args.length - 1];
+    const [input] = args as [string, any];
+    const opts = command.opts();
+    try {
+      const source = await readFile(input);
+      const result = await domhash(source, {
+        includeAttributes: opts.includeAttrs,
+        layoutAware: true,
+        resilience: true
+      });
+      if (result.resilienceScore !== undefined) {
+        console.log(`Resilience: ${result.resilienceEmoji} ${result.resilienceLabel} (${(result.resilienceScore * 100).toFixed(2)}%)`);
+        console.log('Breakdown:', {
+          tagPenalty: (result.resilienceBreakdown?.tagPenalty * 100).toFixed(1) + '%',
+          depthPenalty: (result.resilienceBreakdown?.depthPenalty * 100).toFixed(1) + '%',
+          layoutPenalty: (result.resilienceBreakdown?.layoutPenalty * 100).toFixed(1) + '%'
+        });
+      } else {
+        console.error('No resilience data available');
+      }
+    } catch (err: any) {
+      console.error('Error:', err.message);
+      process.exit(1);
+    }
+  });
+
+program.parseAsync();
 
 /**
  * Parses a comma-separated string of attributes into an array of trimmed strings.

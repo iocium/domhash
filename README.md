@@ -9,7 +9,8 @@ Structure-aware and layout-aware perceptual hashing for HTML/DOM trees. Robust s
 - [Features](#features)
 - [Installation](#installation)
 - [CLI Usage](#cli-usage)
-- [API Reference](#api-reference)
+  - [Demo](docs/demo.html)
+- [API Docs](https://iocium.github.io/domhash)
 - [Examples](#examples)
 - [License](#license)
 
@@ -34,74 +35,33 @@ npm install @iocium/domhash
 
 ## CLI Usage
 
+Usage:
 ```bash
-npx domhash <input> [options]
+npx domhash <command> [options]
 ```
 
-| Option                  | Description                                                 |
-|-------------------------|-------------------------------------------------------------|
-| `-a, --algorithm <type>`      | Hash algorithm: `sha256`, `murmur3`, `blake3`, `simhash`, `minhash` (default: `sha256`) |
-| `-i, --include-attrs <attrs>` | Comma-separated list of attributes to include               |
-| `-s, --shape-vector`          | Output compressed shape vector (run-length encoded)         |
-| `-m, --shape-metric <type>`   | Shape (and layout) similarity metric: `jaccard` (default), `lcs`, `cosine`, `ted` |
-| `-l, --layout-aware`          | Enable layout-aware hashing and layout hash output          |
-| `-r, --resilience`            | Output resilience score with detailed penalties            |
-| `-c, --compare-with <input>`  | Compare against another HTML file or URL                   |
-| `-d, --diff`                  | Show structural diff between inputs                         |
-| `-o, --output <format>`       | Output format: `json`, `markdown`, `html`                   |
+Commands:
 
-### Example
+  hash <input> [options]                Compute hash of a DOM input
+  compare <inputA> <inputB> [options]   Compare two DOM inputs (structural & shape)
+  diff <inputA> <inputB> [options]      Show structural differences between two inputs
+  shape <input> [options]               Output compressed shape vector of a DOM input
+  layout <input> [options]              Output layout shape vector and layout hash
+  resilience <input> [options]          Output resilience score and breakdown
+
+For detailed help on a specific command:
 
 ```bash
-npx domhash index.html --layout-aware --shape-vector --resilience
+npx domhash <command> --help
 ```
 
-```text
-Hash: abc123...
-Shape: ["div*4","span*2","p","span","div"]
-Layout Shape: ["block*2","inline","block*1","inline*3"]
-Layout Hash: def456...
-Resilience: 🟢 Good (87.50%)
-Breakdown: { tagPenalty: "2.0%", depthPenalty: "5.0%", layoutPenalty: "5.5%" }
-```
-
-## API Reference
-
-```ts
-import { domhash, compareStructures } from '@iocium/domhash';
-
-const result = await domhash('<form><input></form>', {
-  algorithm: 'blake3',
-  layoutAware: true,
-  resilience: true,
-  shapeVector: true,
-  includeAttributes: ['action']
-});
-
-console.log('Structure Hash:', result.hash);
-console.log('Layout Hash:', result.layoutHash);
-console.log('Shape Vector:', result.shape);        // run-length encoded
-console.log('Layout Shape:', result.layoutShape);  // run-length encoded
-console.log('Resilience Score:', result.resilienceScore);
-console.log('Resilience:', result.resilienceEmoji, result.resilienceLabel);
-```
-
-The package also exports additional shape-comparison functions for programmatic use:
-```ts
-import { compareShapeJaccard, compareShapeLCS, compareShapeCosine, compareTreeEditDistance } from '@iocium/domhash';
-
-// Using LCS-based shape similarity
-const resA = await domhash(htmlA, { shapeVector: true });
-const resB = await domhash(htmlB, { shapeVector: true });
-const lcsScore = compareShapeLCS(resA.shape || [], resB.shape || []);
-```
 
 ## Examples
 
 // Compare two pages and generate a Markdown report:
 
 ```bash
-npx domhash page1.html --compare-with page2.html --diff --output markdown > report.md
+npx domhash compare page1.html page2.html --diff --output markdown > report.md
 ```
 
 ## License
