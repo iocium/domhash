@@ -6,8 +6,9 @@ export interface DOMNodeShape {
 }
 
 export function extractDOMStructureTree(el: Element, layoutMap?: Map<Element, boolean>): DOMNodeShape {
-  const tag = el.tagName.toLowerCase();
-  const hidden = layoutMap?.get(el) || false;
+  const originalTag = el.tagName.toLowerCase();
+  const isHidden = layoutMap?.get(el) || false;
+  const tag = isHidden ? `hidden:${originalTag}` : originalTag;
 
   const children: DOMNodeShape[] = [];
   for (const child of Array.from(el.children)) {
@@ -34,7 +35,7 @@ export function extractDOMStructureTree(el: Element, layoutMap?: Map<Element, bo
 
   return {
     tag,
-    hidden: hidden || undefined,
+    hidden: isHidden || undefined,
     children: compressed.length > 0 ? compressed : undefined,
   };
 }
