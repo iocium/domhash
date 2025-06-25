@@ -47,6 +47,32 @@ export function canonicalize(root: Element, options: DomHashOptions = {}): Canon
 
   const structure = traverse(root, 0);
   const canonical = serialize(structure);
+  const compressedShape: string[] = [];
+  let lastTag: string | null = null;
+  let runCount = 0;
+  for (const tag of shape) {
+    if (lastTag === null) {
+      lastTag = tag;
+      runCount = 1;
+    } else if (tag === lastTag) {
+      runCount++;
+    } else {
+      if (runCount > 1) {
+        compressedShape.push(`${lastTag}*${runCount}`);
+      } else {
+        compressedShape.push(lastTag);
+      }
+      lastTag = tag;
+      runCount = 1;
+    }
+  }
+  if (lastTag !== null) {
+    if (runCount > 1) {
+      compressedShape.push(`${lastTag}*${runCount}`);
+    } else {
+      compressedShape.push(lastTag);
+    }
+  }
 
-  return { canonical, shape, tagCount, depth: maxDepth };
+  return { canonical, shape: compressedShape, tagCount, depth: maxDepth };
 }
