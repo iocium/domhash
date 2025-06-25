@@ -38,7 +38,7 @@ export default defineConfig([
     entry: ['src/index.ts'],
     format: ['iife'],
     globalName: 'domhash',
-    target: 'es5',
+    target: 'es2019',
     splitting: false,
     sourcemap: true,
     clean: false,

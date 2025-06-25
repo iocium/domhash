@@ -11,8 +11,7 @@
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "browser": "./dist/browser/index.mjs"
+      "require": "./dist/index.js"
     },
     "./cli": {
       "import": "./dist/cli.mjs",
@@ -21,8 +20,7 @@
   },
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup && npm run build:umd",
-    "build:umd": "rollup -c rollup.config.js",
+    "build": "tsup",
     "test": "jest --runInBand --no-cache",
     "test:coverage": "jest --runInBand --coverage --no-cache",
     "docs": "typedoc"
