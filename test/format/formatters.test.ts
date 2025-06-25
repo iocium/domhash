@@ -48,6 +48,19 @@ describe('formatAsHTML', () => {
   });
 });
 
+describe('formatAsHTML with missing optional fields', () => {
+  it('omits shape similarity row and diff section when not provided', () => {
+    const result: DomHashComparisonResult = {
+      hashA: 'a',
+      hashB: 'b',
+      similarity: 0.5,
+    };
+    const html = formatAsHTML(result);
+    expect(html).not.toContain('Shape Similarity');
+    expect(html).not.toContain('Structural Diff');
+  });
+});
+
 describe('formatResult', () => {
   const sample: DomHashComparisonResult = {
     hashA: 'x',

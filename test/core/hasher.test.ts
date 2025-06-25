@@ -74,4 +74,36 @@ describe('hashStructure', () => {
       expect(result).toBe(expected);
     });
   });
+  
+  describe('sha256 via Web Crypto API when subtle is available', () => {
+    let originalCrypto: any;
+    let webcrypto: any;
+    beforeAll(() => {
+      originalCrypto = (global as any).crypto;
+      try {
+        webcrypto = require('crypto').webcrypto;
+      } catch {
+        webcrypto = undefined;
+      }
+      if (webcrypto && webcrypto.subtle) {
+        (global as any).crypto = webcrypto;
+      }
+    });
+    afterAll(() => {
+      (global as any).crypto = originalCrypto;
+    });
+    it('uses crypto.subtle.digest when available', async () => {
+      if (!webcrypto || !webcrypto.subtle) {
+        return;
+      }
+      const text = 'subtle-test';
+      const data = new TextEncoder().encode(text);
+      const hashBuffer = await webcrypto.subtle.digest('SHA-256', data);
+      const expected = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join(''); 
+      const result = await hashStructure(text, 'sha256');
+      expect(result).toBe(expected);
+    });
+  });
 });

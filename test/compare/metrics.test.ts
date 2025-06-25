@@ -59,4 +59,31 @@ describe('compareLayoutVectors', () => {
     const b = ['x'];
     expect(compareLayoutVectors(a, b)).toBe(compareShapeVectors(a, b));
   });
+ 
+describe('edge case similarities', () => {
+  it('compareStructures returns 0 when one string is empty and the other is not', () => {
+    expect(compareStructures('', 'a')).toBe(0);
+  });
+
+  it('compareShapeVectors returns 1 for two empty arrays', () => {
+    expect(compareShapeVectors([], [])).toBe(1);
+  });
+
+  it('compareShapeVectors returns 0 for disjoint sets', () => {
+    expect(compareShapeVectors(['a'], ['b'])).toBe(0);
+  });
+
+  it('compareShapeLCS returns 1 for two empty arrays', () => {
+    expect(compareShapeLCS([], [])).toBe(1);
+  });
+
+  it('compareShapeCosine returns 1 when one or both arrays are empty', () => {
+    expect(compareShapeCosine([], [])).toBe(1);
+    expect(compareShapeCosine(['a'], [])).toBe(1);
+  });
+
+  it('compareTreeEditDistance returns 1 for two empty arrays', () => {
+    expect(compareTreeEditDistance([], [])).toBe(1);
+  });
+});
 });

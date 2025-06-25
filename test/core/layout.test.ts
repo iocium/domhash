@@ -1,4 +1,4 @@
-import { extractLayoutFeatures, serializeLayoutFeatures, computeResilienceScore } from '../../src/core/layout';
+import { extractLayoutFeatures, serializeLayoutFeatures, computeResilienceScore, computeStructuralScore } from '../../src/core/layout';
 
 describe('extractLayoutFeatures and serializeLayoutFeatures', () => {
   describe('inline style fallback when getComputedStyle is unavailable', () => {
@@ -72,5 +72,45 @@ describe('computeResilienceScore', () => {
     expect(result.label).toBe('Fragile');
     expect(result.emoji).toBe('❌');
     expect(result.score).toBeLessThan(0.5);
+  });
+});
+ 
+describe('computeStructuralScore', () => {
+  it('labels Strong for high structural score', () => {
+    const structure = ['div', 'p'];
+    const result = computeStructuralScore(structure);
+    expect(result.label).toBe('Strong');
+    expect(result.emoji).toBe('✅');
+    expect(result.score).toBeGreaterThan(0.85);
+  });
+
+  it('labels Moderate for medium structural score', () => {
+    const structure = Array(4).fill('div');
+    const result = computeStructuralScore(structure);
+    expect(result.label).toBe('Moderate');
+    expect(result.emoji).toBe('⚠️');
+    expect(result.score).toBeGreaterThanOrEqual(0.5);
+    expect(result.score).toBeLessThan(0.85);
+  });
+
+  it('labels Fragile for low structural score', () => {
+    const structure = Array(20).fill('div');
+    const result = computeStructuralScore(structure);
+    expect(result.label).toBe('Fragile');
+    expect(result.emoji).toBe('❌');
+    expect(result.score).toBeLessThan(0.5);
+  });
+});
+
+describe('extractLayoutFeatures with getComputedStyle available', () => {
+  it('uses getComputedStyle to extract default styles', () => {
+    const div = document.createElement('div');
+    const features = extractLayoutFeatures(div);
+    const rootFeature = features[0];
+    expect(rootFeature.display).toBe('block');
+    expect(rootFeature.visibility).toBe('visible');
+    expect(rootFeature.opacity).toBe('1');
+    expect(rootFeature.position).toBe('static');
+    expect(rootFeature.isHidden).toBe(false);
   });
 });

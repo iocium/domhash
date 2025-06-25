@@ -42,5 +42,40 @@ describe('parseInput', () => {
         'Failed to fetch http://example.com: 404 Not Found'
       );
     });
+  
+  describe('fetch and URL support', () => {
+    let originalFetch: any;
+    beforeAll(() => {
+      originalFetch = (global as any).fetch;
+      (global as any).fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        text: async () => '<span>fetched</span>',
+      });
+    });
+    afterAll(() => {
+      (global as any).fetch = originalFetch;
+    });
+
+    it('fetches HTML string from URL string and parses HTML', async () => {
+      const el = await parseInput('http://example.com');
+      expect((global as any).fetch).toHaveBeenCalledWith('http://example.com');
+      expect(el.querySelector('span')?.textContent).toBe('fetched');
+    });
+
+    it('fetches HTML string from URL object and parses HTML', async () => {
+      const urlObj = new URL('http://example.com');
+      const el = await parseInput(urlObj);
+      expect((global as any).fetch).toHaveBeenCalledWith(urlObj.toString());
+      expect(el.querySelector('span')?.textContent).toBe('fetched');
+    });
+
+    it('prepends corsProxy when provided', async () => {
+      const urlObj = new URL('http://example.com');
+      const el = await parseInput(urlObj, { corsProxy: 'proxy/' });
+      expect((global as any).fetch).toHaveBeenCalledWith('proxy/' + urlObj.toString());
+      expect(el.querySelector('span')?.textContent).toBe('fetched');
+    });
   });
+  });
+  
 });
