@@ -25,9 +25,13 @@ jobs:
       - name: Build docs
         run: npm run docs
 
-      - name: Copy demo page
+      - name: Build @iocium/domhash
+        run: npm run build
+
+      - name: Copy demo page and library
         run: |
           cp demo/index.html docs/index.html
+          cp dist/browser/index.mjs docs/domhash.mjs
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
