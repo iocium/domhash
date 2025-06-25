@@ -9,6 +9,30 @@ import {
 } from './core/layout';
 import { DomHashOptions, DomHashResult } from './types';
 import { extractDOMStructureTree } from './core/structureTree';
+/**
+ * Collapse consecutive identical layout shape entries via run-length encoding.
+ * E.g., ['div:block', 'div:block', 'span:inline'] => ['div:block*2', 'span:inline']
+ */
+function compressShapeVector(shape: string[]): string[] {
+  const compressed: string[] = [];
+  let last: string | undefined;
+  let count = 0;
+  for (const entry of shape) {
+    if (entry === last) {
+      count++;
+    } else {
+      if (last !== undefined) {
+        compressed.push(count > 1 ? `${last}*${count}` : last);
+      }
+      last = entry;
+      count = 1;
+    }
+  }
+  if (last !== undefined) {
+    compressed.push(count > 1 ? `${last}*${count}` : last);
+  }
+  return compressed;
+}
 
 /**
  * Generate a DOM hash from input HTML, DOM node, or URL.
@@ -27,7 +51,9 @@ export async function domhash(
   const layout = options.layoutAware ? extractLayoutFeatures(dom) : null;
   const layoutCanonical = layout ? serializeLayoutFeatures(layout) : '';
   const layoutHash = layout ? await hashStructure(layoutCanonical, options.algorithm || 'sha256') : undefined;
-  const layoutShape = layout ? layout.map(f => `${f.tag}:${f.display}`) : undefined;
+  // derive layout shape entries and collapse consecutive duplicates
+  const rawLayoutShape = layout ? layout.map(f => `${f.tag}:${f.display}`) : undefined;
+  const layoutShape = rawLayoutShape ? compressShapeVector(rawLayoutShape) : undefined;
 
   const structureTree = options.shapeVector ? extractDOMStructureTree(dom) : undefined;
 
