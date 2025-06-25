@@ -4,23 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>domhash Browser Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { margin:0; font-family:Arial, sans-serif; background:#f5f5f5; }
-    header { background:#2f3b52; color:#fff; padding:1rem; text-align:center; }
-    .container { max-width:800px; margin:2rem auto; background:#fff; padding:1.5rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-    .controls { display:flex; flex-wrap:wrap; gap:1rem; align-items:center; margin-bottom:1rem; }
-    label { flex:1 0 auto; margin-bottom:0.25rem; }
-    select, button, textarea { font-size:1rem; border:1px solid #ccc; border-radius:4px; }
-    select, input[type="text"] { padding:0.5rem; }
-    button { padding:0.5rem 1rem; background:#2f3b52; color:#fff; cursor:pointer; }
-    button:hover { background:#1f2739; }
-    textarea { width:100%; padding:0.75rem; font-family:monospace; resize:vertical; }
-    .output { white-space:pre-wrap; background:#eee; padding:1rem; border-radius:4px; min-height:120px; margin-top:1rem; overflow:auto; }
-    #inputB-container { display:none; }
+    :root {
+      --primary: #2f3b52;
+      --primary-dark: #1f2739;
+      --bg: #f5f5f5;
+      --surface: #ffffff;
+      --surface-alt: #eee;
+      --text: #333;
+      --accent: #4a90e2;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--primary); color: #fff; padding: 1rem; text-align: center; }
+    header .nav { display: flex; justify-content: center; gap: 1rem; margin-bottom: 0.5rem; }
+    header .nav a { color: var(--accent); text-decoration: none; font-weight: 600; padding: 0.5rem 1rem; }
+    header .nav a.active, header .nav a:hover { color: #fff; background: var(--accent); border-radius: 4px; }
+    .container { max-width: 800px; margin: 2rem auto; background: var(--surface); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 1.5rem; }
+    .controls label { flex: 0 0 auto; margin: 0; }
+    .controls select { flex: 1 0 auto; padding: 0.5rem; }
+    .controls button { padding: 0.5rem 1rem; background: var(--accent); border: none; color: #fff; cursor: pointer; border-radius: 4px; transition: background 0.2s; }
+    .controls button:hover { background: var(--primary-dark); }
+    label { display: block; margin: 0.5rem 0 0.25rem; font-weight: 600; }
+    select, textarea { width: 100%; border: 1px solid #ccc; border-radius: 4px; background: var(--surface-alt); color: var(--text); font-family: monospace; }
+    textarea { padding: 0.75rem; resize: vertical; }
+    .output { margin-top: 1rem; }
+    pre.output { white-space: pre-wrap; background: var(--surface-alt); padding: 1rem; border-radius: 4px; min-height: 120px; overflow: auto; }
+    #inputB-container { display: none; }
   </style>
 </head>
 <body>
-  <header><h1>domhash Browser Demo</h1></header>
+  <header>
+    <div class="nav">
+      <a href="./" class="active">Demo</a>
+      <a href="api/index.html" target="_blank">API Docs</a>
+    </div>
+    <h1>domhash Browser Demo</h1>
+  </header>
   <div class="container">
     <div class="controls">
       <label for="command">Command:</label>
@@ -35,14 +57,14 @@
       <button id="run">Run</button>
     </div>
     <label for="inputA">Input A (HTML):</label>
-    <textarea id="inputA" rows="6">&lt;div&gt;&lt;span&gt;Hello&lt;/span&gt;&lt;/div&gt;</textarea>
+    <textarea id="inputA" rows="6" placeholder="Enter HTML or paste here">&lt;div&gt;&lt;span&gt;Hello&lt;/span&gt;&lt;/div&gt;</textarea>
     <div id="inputB-container">
       <label for="inputB">Input B (HTML):</label>
       <textarea id="inputB" rows="6"></textarea>
     </div>
     <label for="options">Options (JSON):</label>
-    <textarea id="options" rows="3">{}</textarea>
-    <div class="output" id="output">Output will appear here...</div>
+    <textarea id="options" rows="3" placeholder="{ \"algorithm\": \"sha256\" }">{}</textarea>
+    <pre class="output" id="output">Output will appear here...</pre>
   </div>
   <script type="module">
     import { domhash, compareStructures, compareShapeJaccard, compareShapeLCS, compareShapeCosine, compareTreeEditDistance, getStructuralDiff } from './domhash.mjs';
