@@ -3,7 +3,7 @@ import { readFile } from './utils/readFile';
 import { domhash } from './index';
 import {
   compareStructures,
-  compareShapeVectors,
+  compareShapeJaccard,
   compareShapeLCS,
   compareShapeCosine,
   compareTreeEditDistance,
@@ -18,14 +18,15 @@ program
   .name('domhash')
   .version(pkg.version)
   .argument('<input>', 'HTML string, file path, or URL')
-  .option('--include <attrs>', 'Comma-separated attributes to include', parseAttrList)
-  .option('--algo <type>', 'Hashing algorithm (sha256, murmur3, blake3, simhash, minhash)', 'sha256')
-  .option('--shape', 'Output shape vector', false)
-  .option('--layoutAware', 'Enable layout-aware hashing', false)
-  .option('--resilience', 'Enable resilience scoring', false)
-  .option('--compare <inputB>', 'Second input for comparison')
-  .option('--diff', 'Show structural diff between inputs', false)
-  .option('--output <format>', 'Output format: json, markdown, html')
+  .option('-i, --include-attrs <attrs>', 'Comma-separated list of attributes to include', parseAttrList)
+  .option('-a, --algorithm <type>', 'Hashing algorithm: sha256, murmur3, blake3, simhash, minhash (default: sha256)', 'sha256')
+  .option('-s, --shape-vector', 'Output compressed shape vector (run-length encoded)', false)
+  .option('-m, --shape-metric <type>', 'Shape (and layout) similarity metric: jaccard (default), lcs, cosine, ted', 'jaccard')
+  .option('-l, --layout-aware', 'Enable layout-aware hashing', false)
+  .option('-r, --resilience', 'Output resilience score with detailed penalties', false)
+  .option('-c, --compare-with <inputB>', 'Second input (HTML string, file path, or URL) to compare against')
+  .option('-d, --diff', 'Show structural diff between inputs', false)
+  .option('-o, --output <format>', 'Output format: json, markdown, html')
   .parse();
 
 (async () => {
@@ -35,16 +36,16 @@ program
   try {
     const sourceA = await readFile(inputA);
     const resultA = await domhash(sourceA, {
-      algorithm: opts.algo,
-      includeAttributes: opts.include,
-      shapeVector: opts.shape,
+      algorithm: opts.algorithm,
+      includeAttributes: opts.includeAttrs,
+      shapeVector: opts.shapeVector,
       layoutAware: opts.layoutAware,
       resilience: opts.resilience
     });
 
-    if (!opts.compare) {
+    if (!opts.compareWith) {
       console.log('Hash:', resultA.hash);
-      if (opts.shape && resultA.shape) {
+      if (opts.shapeVector && resultA.shape) {
         console.log('Shape:', JSON.stringify(resultA.shape));
       }
       if (opts.layoutAware && resultA.layoutShape) {
@@ -62,38 +63,74 @@ program
       return;
     }
 
-    const sourceB = await readFile(opts.compare);
+    const sourceB = await readFile(opts.compareWith);
     const resultB = await domhash(sourceB, {
-      algorithm: opts.algo,
-      includeAttributes: opts.include,
-      shapeVector: opts.shape,
+      algorithm: opts.algorithm,
+      includeAttributes: opts.includeAttrs,
+      shapeVector: opts.shapeVector,
       layoutAware: opts.layoutAware
     });
 
     const structural = compareStructures(resultA.canonical, resultB.canonical);
-    const shape = (resultA.shape && resultB.shape)
-      ? compareShapeVectors(resultA.shape, resultB.shape)
-      : undefined;
+    let shapeSimilarity: number | undefined;
+    if (resultA.shape && resultB.shape) {
+      switch (opts.shapeMetric) {
+        case 'jaccard':
+          shapeSimilarity = compareShapeJaccard(resultA.shape, resultB.shape);
+          break;
+        case 'lcs':
+          shapeSimilarity = compareShapeLCS(resultA.shape, resultB.shape);
+          break;
+        case 'cosine':
+          shapeSimilarity = compareShapeCosine(resultA.shape, resultB.shape);
+          break;
+        case 'ted':
+          shapeSimilarity = compareTreeEditDistance(resultA.shape, resultB.shape);
+          break;
+        default:
+          throw new Error(`Unknown shape similarity metric: ${opts.shapeMetric}`);
+      }
+    } else {
+      shapeSimilarity = undefined;
+    }
 
     const comparison = {
       hashA: resultA.hash,
       hashB: resultB.hash,
       similarity: structural,
-      shapeSimilarity: shape,
+      shapeSimilarity,
       diff: opts.diff ? getStructuralDiff(resultA.canonical, resultB.canonical) : undefined
     };
 
     if (opts.layoutAware && resultA.layoutShape && resultB.layoutShape) {
-      const layoutSim = compareLayoutVectors(resultA.layoutShape, resultB.layoutShape);
-      console.log('Layout similarity (Jaccard):', (layoutSim * 100).toFixed(2) + '%');
+      const layoutSim = compareLayoutVectors(
+        resultA.layoutShape,
+        resultB.layoutShape,
+        opts.shapeMetric
+      );
+      const labelMap: Record<string, string> = {
+        jaccard: 'Jaccard',
+        lcs: 'LCS',
+        cosine: 'Cosine',
+        ted: 'Tree Edit Distance'
+      };
+      const label = labelMap[opts.shapeMetric] || opts.shapeMetric;
+      console.log(`Layout similarity (${label}):`, (layoutSim * 100).toFixed(2) + '%');
     }
 
     if (opts.output) {
       console.log(formatResult(comparison, opts.output));
     } else {
       console.log('Structural similarity:', (structural * 100).toFixed(2) + '%');
-      if (shape !== undefined) {
-        console.log('Shape similarity (Jaccard):', (shape * 100).toFixed(2) + '%');
+      if (shapeSimilarity !== undefined) {
+        const labelMap: Record<string,string> = {
+          jaccard: 'Jaccard',
+          lcs: 'LCS',
+          cosine: 'Cosine',
+          ted: 'Tree Edit Distance'
+        };
+        const label = labelMap[opts.shapeMetric] || opts.shapeMetric;
+        console.log(`Shape similarity (${label}):`, (shapeSimilarity * 100).toFixed(2) + '%');
       }
       if (opts.diff && comparison.diff) {
         console.log('\nStructural Diff:');

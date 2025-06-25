@@ -4,7 +4,7 @@ export function compareStructures(a: string, b: string): number {
   return maxLen === 0 ? 1 : 1 - dist / maxLen;
 }
 
-export function compareShapeVectors(a: string[], b: string[]): number {
+export function compareShapeJaccard(a: string[], b: string[]): number {
   const setA = new Set(a);
   const setB = new Set(b);
   const intersection = [...setA].filter(tag => setB.has(tag));
@@ -50,8 +50,30 @@ export function compareTreeEditDistance(a: string[], b: string[]): number {
   return maxLen === 0 ? 1 : 1 - dist / maxLen;
 }
 
-export function compareLayoutVectors(a: string[], b: string[]): number {
-  return compareShapeVectors(a, b);
+/**
+ * Compare two layout shape vectors using the specified similarity metric.
+ * @param a - First layout shape vector
+ * @param b - Second layout shape vector
+ * @param metric - Similarity metric: 'jaccard' | 'lcs' | 'cosine' | 'ted'
+ * @returns similarity score between 0 and 1
+ */
+export function compareLayoutVectors(
+  a: string[],
+  b: string[],
+  metric: 'jaccard' | 'lcs' | 'cosine' | 'ted' = 'jaccard'
+): number {
+  switch (metric) {
+    case 'jaccard':
+      return compareShapeJaccard(a, b);
+    case 'lcs':
+      return compareShapeLCS(a, b);
+    case 'cosine':
+      return compareShapeCosine(a, b);
+    case 'ted':
+      return compareTreeEditDistance(a, b);
+    default:
+      throw new Error(`Unknown layout similarity metric: ${metric}`);
+  }
 }
 
 function levenshtein(a: string, b: string): number {

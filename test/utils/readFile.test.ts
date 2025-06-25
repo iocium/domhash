@@ -50,9 +50,12 @@ describe('readFile', () => {
   describe('Bun file support', () => {
     it('uses Bun.file when available', async () => {
       (global as any).Bun = {
-        file: (filePath: string) => ({
-          text: async () => '<bun-content>'
-        })
+        file: (filePath: string) => {
+          void filePath;
+          return {
+            text: async () => '<bun-content>'
+          };
+        }
       };
       const result = await readFile('any-path');
       expect(result).toBe('<bun-content>');

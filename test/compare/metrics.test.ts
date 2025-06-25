@@ -1,6 +1,6 @@
 import {
   compareStructures,
-  compareShapeVectors,
+  compareShapeJaccard,
   compareShapeLCS,
   compareShapeCosine,
   compareTreeEditDistance,
@@ -21,11 +21,11 @@ describe('compareStructures', () => {
   });
 });
 
-describe('compareShapeVectors', () => {
+describe('compareShapeJaccard', () => {
   it('computes Jaccard similarity correctly', () => {
     const a = ['div', 'span'];
     const b = ['div', 'p'];
-    expect(compareShapeVectors(a, b)).toBeCloseTo(1 / 3);
+    expect(compareShapeJaccard(a, b)).toBeCloseTo(1 / 3);
   });
 });
 
@@ -54,10 +54,10 @@ describe('compareTreeEditDistance', () => {
 });
 
 describe('compareLayoutVectors', () => {
-  it('delegates to compareShapeVectors', () => {
+  it('delegates to compareShapeJaccard', () => {
     const a = ['x', 'y'];
     const b = ['x'];
-    expect(compareLayoutVectors(a, b)).toBe(compareShapeVectors(a, b));
+    expect(compareLayoutVectors(a, b)).toBe(compareShapeJaccard(a, b));
   });
  
 describe('edge case similarities', () => {
@@ -65,12 +65,12 @@ describe('edge case similarities', () => {
     expect(compareStructures('', 'a')).toBe(0);
   });
 
-  it('compareShapeVectors returns 1 for two empty arrays', () => {
-    expect(compareShapeVectors([], [])).toBe(1);
+  it('compareShapeJaccard returns 1 for two empty arrays', () => {
+    expect(compareShapeJaccard([], [])).toBe(1);
   });
 
-  it('compareShapeVectors returns 0 for disjoint sets', () => {
-    expect(compareShapeVectors(['a'], ['b'])).toBe(0);
+  it('compareShapeJaccard returns 0 for disjoint sets', () => {
+    expect(compareShapeJaccard(['a'], ['b'])).toBe(0);
   });
 
   it('compareShapeLCS returns 1 for two empty arrays', () => {

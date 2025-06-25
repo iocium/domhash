@@ -40,19 +40,20 @@ npx domhash <input> [options]
 
 | Option                  | Description                                                 |
 |-------------------------|-------------------------------------------------------------|
-| `--algo <type>`         | Hash algorithm: `sha256`, `murmur3`, `blake3`, `simhash`, `minhash` (default: `sha256`) |
-| `--include <attrs>`     | Comma-separated list of attributes to include               |
-| `--shape`               | Output compressed shape vector (run-length encoded)         |
-| `--layoutAware`         | Enable layout-aware canonicalization & hashing              |
-| `--resilience`          | Output resilience score (0–1) with detailed penalties      |
-| `--compare <input>`     | Compare against another HTML file or URL                   |
-| `--diff`                | Show structural diff between inputs                         |
-| `--output <format>`     | Output format: `json`, `markdown`, `html`                   |
+| `-a, --algorithm <type>`      | Hash algorithm: `sha256`, `murmur3`, `blake3`, `simhash`, `minhash` (default: `sha256`) |
+| `-i, --include-attrs <attrs>` | Comma-separated list of attributes to include               |
+| `-s, --shape-vector`          | Output compressed shape vector (run-length encoded)         |
+| `-m, --shape-metric <type>`   | Shape (and layout) similarity metric: `jaccard` (default), `lcs`, `cosine`, `ted` |
+| `-l, --layout-aware`          | Enable layout-aware hashing and layout hash output          |
+| `-r, --resilience`            | Output resilience score with detailed penalties            |
+| `-c, --compare-with <input>`  | Compare against another HTML file or URL                   |
+| `-d, --diff`                  | Show structural diff between inputs                         |
+| `-o, --output <format>`       | Output format: `json`, `markdown`, `html`                   |
 
 ### Example
 
 ```bash
-npx domhash index.html --layoutAware --shape --resilience
+npx domhash index.html --layout-aware --shape-vector --resilience
 ```
 
 ```text
@@ -85,12 +86,22 @@ console.log('Resilience Score:', result.resilienceScore);
 console.log('Resilience:', result.resilienceEmoji, result.resilienceLabel);
 ```
 
+The package also exports additional shape-comparison functions for programmatic use:
+```ts
+import { compareShapeJaccard, compareShapeLCS, compareShapeCosine, compareTreeEditDistance } from '@iocium/domhash';
+
+// Using LCS-based shape similarity
+const resA = await domhash(htmlA, { shapeVector: true });
+const resB = await domhash(htmlB, { shapeVector: true });
+const lcsScore = compareShapeLCS(resA.shape || [], resB.shape || []);
+```
+
 ## Examples
 
-- Compare two pages and generate a Markdown report:
+// Compare two pages and generate a Markdown report:
 
 ```bash
-npx domhash page1.html --compare page2.html --diff --output markdown > report.md
+npx domhash page1.html --compare-with page2.html --diff --output markdown > report.md
 ```
 
 ## License
