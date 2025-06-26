@@ -1,9 +1,16 @@
 import murmurhash3 from './murmur3';
 import { blake3 } from '@noble/hashes/blake3';
-import { TextEncoder } from 'util';
 
 export async function hashStructure(input: string, algo: 'sha256' | 'murmur3' | 'blake3' | 'simhash' | 'minhash' = 'sha256'): Promise<string> {
-  const data = new TextEncoder().encode(input);
+  // Choose TextEncoder: use browser global if available, else load Node.js util TextEncoder
+  let Encoder: typeof TextEncoder;
+  if (typeof globalThis.TextEncoder !== 'undefined') {
+    Encoder = globalThis.TextEncoder;
+  } else {
+    const { TextEncoder: NodeTextEncoder } = await import('util');
+    Encoder = NodeTextEncoder;
+  }
+  const data = new Encoder().encode(input);
 
   switch (algo) {
     case 'murmur3':
