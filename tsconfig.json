@@ -14,5 +14,8 @@
     "declaration": true,
     "types": ["bun", "jest", "node"]
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "test"
+  ]
 }
