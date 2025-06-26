@@ -66,8 +66,11 @@
     <textarea id="options" rows="3" placeholder="{ \"algorithm\": \"sha256\" }">{}</textarea>
     <pre class="output" id="output">Output will appear here...</pre>
   </div>
-  <script type="module">
-    import { domhash, compareStructures, compareShapeJaccard, compareShapeLCS, compareShapeCosine, compareTreeEditDistance, getStructuralDiff } from './domhash.mjs';
+  <!-- Load UMD build for browser/demo -->
+  <script src="./domhash.js"></script>
+  <script>
+    // Use the global domhash API exposed by the UMD bundle
+    const { domhash, compareStructures, compareShapeJaccard, compareShapeLCS, compareShapeCosine, compareTreeEditDistance, getStructuralDiff } = globalThis.domhash;
 
     const commandEl = document.getElementById('command');
     const runBtn = document.getElementById('run');

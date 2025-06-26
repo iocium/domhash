@@ -31,7 +31,7 @@ jobs:
       - name: Copy demo page and library
         run: |
           cp demo/index.html docs/index.html
-          cp dist/browser/index.mjs docs/domhash.mjs
+          cp dist/umd/index.global.js docs/domhash.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
