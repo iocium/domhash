@@ -91,5 +91,5 @@ export async function domhash(
 
 export * from './compare/metrics';
 export { computeResilienceScore, ResilienceBreakdown } from './core/layout';
-export type { DomHashOptions, DomHashResult, StructureNode } from './types';
+export type { DomHashOptions, DomHashResult } from './types';
 export { getStructuralDiff } from './format';

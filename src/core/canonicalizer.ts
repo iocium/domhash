@@ -1,4 +1,4 @@
-import { DomHashOptions, StructureNode } from '../types';
+import { DomHashOptions } from '../types';
 
 export interface CanonicalizeResult {
   canonical: string;

@@ -182,8 +182,4 @@ export interface DomHashResult {
  *                                        where each node can have its own set 
  *                                        of attributes and children.
  */
-export interface StructureNode {
-  tag: string;
-  attributes: string[];
-  children: StructureNode[];
-}
+// Removed unused StructureNode interface (no longer used in API)
