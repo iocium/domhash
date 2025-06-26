@@ -24,16 +24,25 @@ export function formatResult(result: DomHashComparisonResult, format: 'json' | '
 }
 
 export function getStructuralDiff(a: string, b: string): string[] {
-  const tokenize = (str: string): string[] => str.match(/<[^>]+>(?:<\/[^>]+>)?/g) || [];
+  // Split canonical strings into tags and text segments for diffing
+  const tokenize = (str: string): string[] => {
+    return str
+      .split(/(<[^>]+>[^<]*<\/[\s\S]*?>|<[^>]+>)/g)
+      .filter(token => token.trim() !== '');
+  };
   const aLines = tokenize(a);
   const bLines = tokenize(b);
   const diff: string[] = [];
   const max = Math.max(aLines.length, bLines.length);
 
   for (let i = 0; i < max; i++) {
-    if (aLines[i] !== bLines[i]) {
-      if (aLines[i]) diff.push(`- ${aLines[i]}`);
-      if (bLines[i]) diff.push(`+ ${bLines[i]}`);
+    const aTok = aLines[i] || '';
+    const bTok = bLines[i] || '';
+    if (aTok !== bTok) {
+      if (aTok) diff.push(`- ${aTok}`);
+      if (bTok) diff.push(`+ ${bTok}`);
+    } else if (aTok) {
+      diff.push(`  ${aTok}`);
     }
   }
   return diff;
