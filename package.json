@@ -23,6 +23,7 @@
     "build": "tsup",
     "test": "jest --runInBand --no-cache",
     "test:coverage": "jest --runInBand --coverage --no-cache",
+    "typecheck": "tsc --noEmit",
     "docs": "typedoc"
   },
   "bin": {
