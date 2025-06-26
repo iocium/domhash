@@ -9,8 +9,8 @@ Structure-aware and layout-aware perceptual hashing for HTML/DOM trees. Robust s
 - [Features](#features)
 - [Installation](#installation)
 - [CLI Usage](#cli-usage)
-  - [Demo](docs/demo.html)
-- [API Docs](https://iocium.github.io/domhash)
+- [Demo](https://iocium.github.io/domhash)
+- [API Docs](https://iocium.github.io/domhash/api)
 - [Examples](#examples)
 - [License](#license)
 
