@@ -69,8 +69,8 @@
   <!-- Load UMD build for browser/demo -->
   <script src="./domhash.js"></script>
   <script>
-    // Use the global domhash API exposed by the UMD bundle
-    const { domhash, compareStructures, compareShapeJaccard, compareShapeLCS, compareShapeCosine, compareTreeEditDistance, getStructuralDiff } = globalThis.domhash;
+    const api = globalThis.domhash;
+    const { compareStructures, compareShapeJaccard, compareShapeLCS, compareShapeCosine, compareTreeEditDistance, getStructuralDiff } = api;
 
     const commandEl = document.getElementById('command');
     const runBtn = document.getElementById('run');
@@ -95,11 +95,11 @@
         let result;
         switch (cmd) {
           case 'hash':
-            result = await domhash(htmlA, opts);
+            result = await api.domhash(htmlA, opts);
             break;
           case 'compare': {
-            const resA = await domhash(htmlA, opts);
-            const resB = await domhash(htmlB, opts);
+            const resA = await api.domhash(htmlA, opts);
+            const resB = await api.domhash(htmlB, opts);
             const structural = compareStructures(resA.canonical, resB.canonical);
             let shapeSimilarity;
             if (resA.shape && resB.shape) shapeSimilarity = compareShapeJaccard(resA.shape, resB.shape);
@@ -108,23 +108,23 @@
             break;
           }
           case 'diff': {
-            const resA = await domhash(htmlA, opts);
-            const resB = await domhash(htmlB, opts);
+            const resA = await api.domhash(htmlA, opts);
+            const resB = await api.domhash(htmlB, opts);
             result = getStructuralDiff(resA.canonical, resB.canonical);
             break;
           }
           case 'shape': {
-            const res = await domhash(htmlA, { ...opts, shapeVector: true });
+            const res = await api.domhash(htmlA, { ...opts, shapeVector: true });
             result = res.shape;
             break;
           }
           case 'layout': {
-            const res = await domhash(htmlA, { ...opts, layoutAware: true });
+            const res = await api.domhash(htmlA, { ...opts, layoutAware: true });
             result = { layoutShape: res.layoutShape, layoutHash: res.layoutHash };
             break;
           }
           case 'resilience': {
-            const res = await domhash(htmlA, { ...opts, layoutAware: true, resilience: true });
+            const res = await api.domhash(htmlA, { ...opts, layoutAware: true, resilience: true });
             result = { resilienceScore: res.resilienceScore, resilienceBreakdown: res.resilienceBreakdown, resilienceEmoji: res.resilienceEmoji, resilienceLabel: res.resilienceLabel };
             break;
           }
