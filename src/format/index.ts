@@ -34,8 +34,6 @@ export function getStructuralDiff(a: string, b: string): string[] {
     if (aLines[i] !== bLines[i]) {
       if (aLines[i]) diff.push(`- ${aLines[i]}`);
       if (bLines[i]) diff.push(`+ ${bLines[i]}`);
-    } else if (aLines[i]) {
-      diff.push(`  ${aLines[i]}`);
     }
   }
   return diff;
