@@ -21,8 +21,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup",
-    "test": "jest --runInBand --no-cache",
-    "test:coverage": "jest --runInBand --coverage --no-cache",
+    "test": "node ./scripts/runTests.js",
+    "test:coverage": "node ./scripts/runTests.js --coverage",
     "typecheck": "tsc --noEmit",
     "docs": "typedoc"
   },

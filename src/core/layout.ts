@@ -17,7 +17,14 @@ export function extractLayoutFeatures(root: Element): LayoutFeature[] {
     let opacity = '1';
     let position = 'static';
 
-    if (typeof getComputedStyle === 'function') {
+    // Parse inline style attribute if present
+    const inlineStyle = typeof el.getAttribute === 'function' ? el.getAttribute('style') || '' : '';
+    if (inlineStyle) {
+      display = inlineStyle.match(/display:\s*([\w-]+)/)?.[1] || display;
+      visibility = inlineStyle.match(/visibility:\s*(\w+)/)?.[1] || visibility;
+      opacity = inlineStyle.match(/opacity:\s*([\d.]+)/)?.[1] || opacity;
+      position = inlineStyle.match(/position:\s*([\w-]+)/)?.[1] || position;
+    } else if (typeof getComputedStyle === 'function') {
       try {
         const style = getComputedStyle(el);
         display = style.display || display;
@@ -25,12 +32,6 @@ export function extractLayoutFeatures(root: Element): LayoutFeature[] {
         opacity = style.opacity || opacity;
         position = style.position || position;
       } catch {}
-    } else if ('getAttribute' in el && typeof el.getAttribute === 'function') {
-      const style = el.getAttribute('style') || '';
-      display = style.match(/display:\s*([\w-]+)/)?.[1] || display;
-      visibility = style.match(/visibility:\s*(\w+)/)?.[1] || visibility;
-      opacity = style.match(/opacity:\s*([\d.]+)/)?.[1] || opacity;
-      position = style.match(/position:\s*([\w-]+)/)?.[1] || position;
     } else if ('display' in el) {
       display = (el as any).display || display;
     }
@@ -84,24 +85,30 @@ export interface StructuralBreakdown {
 }
 
 export function computeStructuralScore(structure: string[]): StructuralBreakdown {
-  const tagPenalty = 1 - Math.min(new Set(structure).size / structure.length, 1);
-  const depthPenalty = structure.length > 0 ? Math.min(1, structure.length / 100) : 0;
-
-  const repetitionPenalty = (() => {
-    let maxRun = 1;
-    let currentRun = 1;
-    for (let i = 1; i < structure.length; i++) {
-      if (structure[i] === structure[i - 1]) {
-        currentRun++;
-        maxRun = Math.max(maxRun, currentRun);
-      } else {
-        currentRun = 1;
-      }
-    }
-    return Math.min(maxRun / 20, 1);
-  })();
-
-  const leafPenalty = structure.filter(tag => tag === 'div' || tag === 'span').length / structure.length;
+  const tagPenalty = structure.length > 0
+    ? 1 - Math.min(new Set(structure).size / structure.length, 1)
+    : 0;
+  const depthPenalty = structure.length > 0
+    ? Math.min(1, structure.length / 100)
+    : 0;
+  const repetitionPenalty = structure.length > 0
+    ? (() => {
+        let maxRun = 1;
+        let currentRun = 1;
+        for (let i = 1; i < structure.length; i++) {
+          if (structure[i] === structure[i - 1]) {
+            currentRun++;
+            maxRun = Math.max(maxRun, currentRun);
+          } else {
+            currentRun = 1;
+          }
+        }
+        return Math.min(maxRun / 20, 1);
+      })()
+    : 0;
+  const leafPenalty = structure.length > 0
+    ? structure.filter(tag => tag === 'div' || tag === 'span').length / structure.length
+    : 0;
 
   const penalties = [tagPenalty, depthPenalty, repetitionPenalty, leafPenalty];
   const avgPenalty = penalties.reduce((a, b) => a + b, 0) / penalties.length;
@@ -131,11 +138,13 @@ export function computeStructuralScore(structure: string[]): StructuralBreakdown
 }
 
 export function computeResilienceScore(structure: string[], layout?: string[]): ResilienceBreakdown {
+  const length = structure.length;
   const tagVariety = new Set(structure).size;
-  const tagPenalty = 1 - Math.min(tagVariety / structure.length, 1);
-  const depthPenalty = structure.length > 0 ? Math.min(1, structure.length / 200) : 0;
+  const tagPenalty = length > 0 ? 1 - Math.min(tagVariety / length, 1) : 0;
+  // penalize depth only for large structures
+  const depthPenalty = length >= 200 ? Math.min(1, length / 200) : 0;
   const hasLayout = Array.isArray(layout) && layout.length > 0;
-  const layoutVariety = hasLayout ? new Set(layout.map(d => d.split(':')[1])).size : 0;
+  const layoutVariety = hasLayout ? new Set(layout).size : 0;
   const layoutPenalty = hasLayout ? 1 - Math.min(layoutVariety / layout.length, 1) : 0;
 
   const penalties = [tagPenalty, depthPenalty, layoutPenalty];

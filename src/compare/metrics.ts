@@ -31,8 +31,15 @@ export function compareShapeCosine(a: string[], b: string[]): number {
   };
   const freqA = freq(a);
   const freqB = freq(b);
+  // Identical multisets: perfect similarity
+  if (freqA.size === freqB.size && [...freqA.entries()].every(([tag, count]) => freqB.get(tag) === count)) {
+    return 1;
+  }
+  // Compute dot product and magnitudes
   const allTags = new Set([...freqA.keys(), ...freqB.keys()]);
-  let dot = 0, magA = 0, magB = 0;
+  let dot = 0;
+  let magA = 0;
+  let magB = 0;
   for (const tag of allTags) {
     const x = freqA.get(tag) || 0;
     const y = freqB.get(tag) || 0;
@@ -40,8 +47,13 @@ export function compareShapeCosine(a: string[], b: string[]): number {
     magA += x * x;
     magB += y * y;
   }
-  if (magA === 0 || magB === 0) return 1;
-  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+  // If either vector is zero, treat as perfect similarity (edge case)
+  if (magA === 0 || magB === 0) {
+    return 1;
+  }
+  const sim = dot / (Math.sqrt(magA) * Math.sqrt(magB));
+  // Clamp to [0,1]
+  return Math.min(1, Math.max(0, sim));
 }
 
 export function compareTreeEditDistance(a: string[], b: string[]): number {
