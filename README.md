@@ -71,6 +71,23 @@ The following global options are available when connecting to a remote Chrome in
 npx domhash compare page1.html page2.html --diff --output markdown > report.md
 ```
 
+## Profiling
+
+We include a simple CPU profiling script to help identify hotspots in the core `domhash` function. It runs the demo HTML 100 times and captures a Chrome DevTools profile file.
+
+1. Build the library:
+   ```bash
+   npm run build
+   ```
+2. Run the profiler:
+   ```bash
+   npm run profile
+   ```
+   This generates `profile.cpuprofile` in the project root.
+3. Open the profile in Chrome or Edge DevTools:
+   - In Chrome, go to `chrome://inspect` → **Memory** → **Load** and select `profile.cpuprofile`.
+   - Analyze the CPU flame chart to find your top functions.
+
 ## License
 
 MIT License — see [LICENSE](LICENSE) for details.
