@@ -65,6 +65,18 @@ export interface DomHashOptions {
    * Optional CORS proxy URL prefix to prepend when fetching external resources.
    */
   corsProxy?: string;
+  /**
+   * Use an existing Chrome instance via Puppeteer.
+   */
+  usePuppeteer?: boolean;
+  /**
+   * Options for connecting Puppeteer to a remote browser.
+   * Either browserWSEndpoint or browserURL can be provided.
+   */
+  puppeteerConnect?: {
+    browserWSEndpoint?: string;
+    browserURL?: string;
+  };
 }
 
 /**

@@ -4,6 +4,52 @@ import { InputSource, DomHashOptions } from '../types';
  * Parses a provided input (HTML string, URL, DOM, or Element) into a root Element.
  */
 export async function parseInput(input: InputSource, options: DomHashOptions = {}): Promise<Element> {
+  if (options.usePuppeteer) {
+    let html: string;
+    let browser: any;
+    try {
+      const puppeteerModule = await import('puppeteer-core');
+      const puppeteer = (puppeteerModule as any).default || puppeteerModule;
+      if (options.puppeteerConnect && (options.puppeteerConnect.browserWSEndpoint || options.puppeteerConnect.browserURL)) {
+        if (options.puppeteerConnect.browserWSEndpoint) {
+          browser = await puppeteer.connect({ browserWSEndpoint: options.puppeteerConnect.browserWSEndpoint });
+        } else {
+          browser = await puppeteer.connect({ browserURL: options.puppeteerConnect.browserURL! });
+        }
+      } else {
+        browser = await puppeteer.launch();
+      }
+      const page = await browser.newPage();
+      if (typeof input === 'string') {
+        if (input.trim().startsWith('<')) {
+          await page.setContent(input, { waitUntil: 'networkidle0' });
+        } else {
+          await page.goto(input, { waitUntil: 'networkidle0' });
+        }
+      } else if (input instanceof URL) {
+        await page.goto(input.toString(), { waitUntil: 'networkidle0' });
+      } else if ('nodeType' in input && (input.nodeType === 1 || input.nodeType === 9)) {
+        const htmlString = input.nodeType === 9
+          ? (input as Document).documentElement.outerHTML
+          : (input as Element).outerHTML;
+        await page.setContent(htmlString, { waitUntil: 'networkidle0' });
+      } else {
+        throw new Error('Unsupported input type for Puppeteer parsing');
+      }
+      html = await page.content();
+      await page.close();
+      if (options.puppeteerConnect) {
+        if (typeof browser.disconnect === 'function') {
+          browser.disconnect();
+        }
+      } else {
+        await browser.close();
+      }
+    } catch (err: any) {
+      throw new Error(`Puppeteer fetch failed: ${err.message || err}`);
+    }
+    return await parseHtml(html);
+  }
   const fetchWithProxy = async (url: string) => {
     const finalUrl = options.corsProxy ? options.corsProxy + url : url;
     const res = await fetch(finalUrl);

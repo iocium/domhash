@@ -25,19 +25,30 @@ program
   .option('-s, --shape-vector', 'Output compressed shape vector (run-length encoded)', false)
   .option('-l, --layout-aware', 'Enable layout-aware hashing', false)
   .option('-r, --resilience', 'Output resilience score with detailed penalties', false)
+  .option('--use-puppeteer', 'Connect to an existing Chrome via Puppeteer', false)
+  .option('--browser-ws <wsEndpoint>', 'WebSocket endpoint to connect to Chrome')
+  .option('--browser-url <browserURL>', 'HTTP endpoint to connect to Chrome')
   .action(async (...args) => {
     const command = args[args.length - 1];
     const opts = command.opts();
     const input = args[0];
     try {
       const source = await readFile(input);
-      const result = await domhash(source, {
+      const domOptions: any = {
         algorithm: opts.algorithm,
         includeAttributes: opts.includeAttrs,
         shapeVector: opts.shapeVector,
         layoutAware: opts.layoutAware,
-        resilience: opts.resilience
-      });
+        resilience: opts.resilience,
+        usePuppeteer: opts.usePuppeteer
+      };
+      if (opts.usePuppeteer && (opts.browserWs || opts.browserUrl)) {
+        domOptions.puppeteerConnect = {
+          browserWSEndpoint: opts.browserWs,
+          browserURL: opts.browserUrl
+        };
+      }
+      const result = await domhash(source, domOptions);
 
       console.log('Hash:', result.hash);
       if (opts.shapeVector && result.shape) {
@@ -69,6 +80,9 @@ program
   .option('-a, --algorithm <type>', 'Hashing algorithm: sha256, murmur3, blake3, simhash, minhash', 'sha256')
   .option('-s, --shape-vector', 'Output compressed shape vector (run-length encoded)', false)
   .option('-l, --layout-aware', 'Enable layout-aware hashing', false)
+  .option('--use-puppeteer', 'Connect to an existing Chrome via Puppeteer', false)
+  .option('--browser-ws <wsEndpoint>', 'WebSocket endpoint to connect to Chrome')
+  .option('--browser-url <browserURL>', 'HTTP endpoint to connect to Chrome')
   .option('-m, --shape-metric <type>', 'Shape similarity metric: jaccard (default), lcs, cosine, ted', 'jaccard')
   .option('-d, --diff', 'Show structural diff between inputs', false)
   .option('-o, --output <format>', 'Output format: json, markdown, html')
@@ -79,19 +93,22 @@ program
     const inputB = args[1];
     try {
       const sourceA = await readFile(inputA);
-      const resultA = await domhash(sourceA, {
+      const domOptions: any = {
         algorithm: opts.algorithm,
         includeAttributes: opts.includeAttrs,
         shapeVector: opts.shapeVector,
-        layoutAware: opts.layoutAware
-      });
+        layoutAware: opts.layoutAware,
+        usePuppeteer: opts.usePuppeteer
+      };
+      if (opts.usePuppeteer && (opts.browserWs || opts.browserUrl)) {
+        domOptions.puppeteerConnect = {
+          browserWSEndpoint: opts.browserWs,
+          browserURL: opts.browserUrl
+        };
+      }
+      const resultA = await domhash(sourceA, domOptions);
       const sourceB = await readFile(inputB);
-      const resultB = await domhash(sourceB, {
-        algorithm: opts.algorithm,
-        includeAttributes: opts.includeAttrs,
-        shapeVector: opts.shapeVector,
-        layoutAware: opts.layoutAware
-      });
+      const resultB = await domhash(sourceB, domOptions);
 
       const structural = compareStructures(resultA.canonical, resultB.canonical);
       let shapeSimilarity: number | undefined;

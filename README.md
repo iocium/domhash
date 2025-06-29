@@ -54,6 +54,13 @@ For detailed help on a specific command:
 ```bash
 npx domhash <command> --help
 ```
+### Puppeteer Options
+
+The following global options are available when connecting to a remote Chrome instance:
+
+- `--use-puppeteer`          Use Puppeteer and connect to an existing Chrome instance
+- `--browser-ws <endpoint>`  WebSocket Debugging URL (e.g., `ws://localhost:9222`) to connect
+- `--browser-url <url>`      HTTP Debugging URL (e.g., `http://localhost:9222`) to connect
 
 
 ## Examples
