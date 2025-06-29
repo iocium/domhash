@@ -1,6 +1,18 @@
 import murmurhash3 from './murmur3';
 import { blake3 } from '@noble/hashes/blake3';
 
+// Cache Node.js crypto and TextEncoder implementations at load time
+let nodeCreateHash: ((algorithm: string) => import('crypto').Hash) | null = null;
+let NodeTextEncoder: typeof TextEncoder | null = null;
+if (typeof require === 'function') {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const crypto = require('crypto');
+  nodeCreateHash = crypto.createHash;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const util = require('util');
+  NodeTextEncoder = util.TextEncoder || null;
+}
+
 export async function hashStructure(input: string, algo: 'sha256' | 'murmur3' | 'blake3' | 'simhash' | 'minhash' = 'sha256'): Promise<string> {
   // Fast path for string-based hashes that don't require encoding
   switch (algo) {
@@ -16,9 +28,10 @@ export async function hashStructure(input: string, algo: 'sha256' | 'murmur3' | 
   let Encoder: typeof TextEncoder;
   if (typeof globalThis.TextEncoder !== 'undefined') {
     Encoder = globalThis.TextEncoder;
-  } else {
-    const { TextEncoder: NodeTextEncoder } = await import('util');
+  } else if (NodeTextEncoder) {
     Encoder = NodeTextEncoder;
+  } else {
+    throw new Error('TextEncoder is not available in this environment');
   }
   const data = new Encoder().encode(input);
 
@@ -28,9 +41,8 @@ export async function hashStructure(input: string, algo: 'sha256' | 'murmur3' | 
     case 'sha256':
     default:
       // prefer Node.js crypto if available
-      if (typeof require === 'function') {
-        const { createHash } = await import('crypto');
-        return createHash('sha256').update(input, 'utf8').digest('hex');
+      if (nodeCreateHash) {
+        return nodeCreateHash('sha256').update(input, 'utf8').digest('hex');
       } else if (globalThis.crypto?.subtle) {
         const hash = await crypto.subtle.digest('SHA-256', data);
         return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
