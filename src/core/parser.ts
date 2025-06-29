@@ -1,4 +1,6 @@
 import { InputSource, DomHashOptions } from '../types';
+// Cache dynamic import for LinkeDOMParser to avoid per-call overhead
+let linkedomModule: Promise<typeof import('linkedom')> | null = null;
 
 /**
  * Parses a provided input (HTML string, URL, DOM, or Element) into a root Element.
@@ -102,14 +104,9 @@ async function parseHtml(html: string): Promise<Element> {
     return root;
   }
 
-  try {
-    const { DOMParser: LinkeDOMParser } = await import('linkedom');
-    const wrapper = `<!doctype html><html><head></head><body>${html}</body></html>`;
-    const parser = new LinkeDOMParser();
-    const doc = parser.parseFromString(wrapper, 'text/html');
-    return doc.documentElement;
-  } catch (err: any) {
-    console.error('Failed to import linkedom:', err);
-    throw new Error('No HTML parser available in this environment');
-  }
+  // Fallback to LinkeDOM (Node.js environments)
+  if (!linkedomModule) linkedomModule = import('linkedom');
+  const linkedom = await linkedomModule;
+  const window = linkedom.parseHTML(html);
+  return window.document.documentElement;
 }
