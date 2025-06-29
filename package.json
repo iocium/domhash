@@ -25,7 +25,8 @@
     "test:coverage": "node ./scripts/runTests.js --coverage",
     "typecheck": "tsc --noEmit",
     "docs": "typedoc",
-    "profile": "node scripts/profile.js"
+    "profile": "node scripts/profile.js",
+    "benchmark": "node scripts/benchmark.js"
   },
   "bin": {
     "domhash": "dist/cli.js"

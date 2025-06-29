@@ -103,3 +103,8 @@ export * from './compare/metrics';
 export { computeResilienceScore, ResilienceBreakdown } from './core/layout';
 export type { DomHashOptions, DomHashResult } from './types';
 export { getStructuralDiff } from './format';
+
+// Expose internal functions for benchmarking and advanced use
+export { canonicalize } from './core/canonicalizer';
+export { hashStructure } from './core/hasher';
+export { parseInput } from './core/parser';
