@@ -22,6 +22,18 @@ describe('layout features and serialization', () => {
       tag: 'p', display: 'block', visibility: 'visible', opacity: '1', position: 'static', isHidden: false
     });
   });
+  it('uses getComputedStyle when no inline style is present', () => {
+    const div = document.createElement('div');
+    const features = extractLayoutFeatures(div);
+    expect(features[0]).toMatchObject({
+      tag: 'div',
+      display: expect.any(String),
+      visibility: expect.any(String),
+      opacity: expect.any(String),
+      position: expect.any(String),
+      isHidden: false
+    });
+  });
 
   it('serializes layout features into string', () => {
     const features = [

@@ -48,7 +48,17 @@ export async function domhash(
   const structure = canonicalize(dom, options);
   const hash = await hashStructure(structure.canonical, options.algorithm || 'sha256');
 
-  const layout = options.layoutAware ? extractLayoutFeatures(dom) : null;
+  let layout = null;
+  if (options.layoutAware) {
+    let layoutRoot: Element = dom;
+    if (typeof input === 'string' && dom.tagName.toLowerCase() === 'html') {
+      const body = dom.querySelector('body');
+      if (body && body.children.length === 1) {
+        layoutRoot = body.children[0] as Element;
+      }
+    }
+    layout = extractLayoutFeatures(layoutRoot);
+  }
   const layoutCanonical = layout ? serializeLayoutFeatures(layout) : '';
   const layoutHash = layout ? await hashStructure(layoutCanonical, options.algorithm || 'sha256') : undefined;
   // derive layout shape entries and collapse consecutive duplicates

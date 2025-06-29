@@ -77,5 +77,20 @@ describe('parseInput', () => {
     });
   });
   });
+  describe('parseHtml via linkedom fallback', () => {
+    let originalDOMParser: any;
+    beforeAll(() => {
+      originalDOMParser = (global as any).DOMParser;
+      delete (global as any).DOMParser;
+    });
+    afterAll(() => {
+      (global as any).DOMParser = originalDOMParser;
+    });
+    it('parses HTML using linkedom when DOMParser and HTMLRewriter are unavailable', async () => {
+      const el = await parseInput('<div><span>link</span></div>');
+      expect(el.tagName.toLowerCase()).toBe('html');
+      expect(el.querySelector('span')?.textContent).toBe('link');
+    });
+  });
   
 });

@@ -53,4 +53,9 @@ describe('domhash', () => {
     const result = await domhash(html, { algorithm: 'murmur3' });
     expect(result.hash).toMatch(/^[0-9a-f]{8}$/);
   });
+  it('compresses duplicate layout shapes correctly', async () => {
+    const html = '<div><span></span><span></span><span></span></div>';
+    const result = await domhash(html, { layoutAware: true });
+    expect(result.layoutShape).toEqual(['div:block', 'span:block*3']);
+  });
 });

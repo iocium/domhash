@@ -72,6 +72,23 @@ describe('hashStructure', () => {
       const expected = createHash('sha256').update(text, 'utf8').digest('hex');
       const result = await hashStructure(text, 'sha256');
       expect(result).toBe(expected);
+  });
+  });
+  describe('TextEncoder fallback when not available', () => {
+    let originalTextEncoder: any;
+    beforeAll(() => {
+      originalTextEncoder = (global as any).TextEncoder;
+      delete (global as any).TextEncoder;
+    });
+    afterAll(() => {
+      (global as any).TextEncoder = originalTextEncoder;
+    });
+    it('uses util.TextEncoder when TextEncoder is undefined', async () => {
+      const text = 'fallback-test';
+      const { createHash } = await import('crypto');
+      const expected = createHash('sha256').update(text, 'utf8').digest('hex');
+      const result = await hashStructure(text, 'sha256');
+      expect(result).toBe(expected);
     });
   });
   

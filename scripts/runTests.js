@@ -10,12 +10,14 @@ const { runCLI } = require('@jest/core');
     runInBand: true,
     cache: false,
     ...(args.includes('--coverage') ? { coverage: true } : {}),
+    ...(args.includes('--verbose') ? { verbose: true } : {}),
   };
   try {
     const { results } = await runCLI(cliConfig, [rootDir]);
-    process.exit(results.success ? 0 : 1);
+    process.exitCode = results.success ? 0 : 1;
   } catch (err) {
-    console.error('Error running tests:', err);
-    process.exit(1);
+    // Print errors to stdout for visibility
+    console.log('Error running tests:', err);
+    process.exitCode = 1;
   }
 })();

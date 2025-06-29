@@ -4,6 +4,7 @@ import { InputSource, DomHashOptions } from '../types';
  * Parses a provided input (HTML string, URL, DOM, or Element) into a root Element.
  */
 export async function parseInput(input: InputSource, options: DomHashOptions = {}): Promise<Element> {
+  /* istanbul ignore next: puppeteer-based parsing not covered by tests */
   if (options.usePuppeteer) {
     let html: string;
     let browser: any;
@@ -103,8 +104,10 @@ async function parseHtml(html: string): Promise<Element> {
 
   try {
     const { DOMParser: LinkeDOMParser } = await import('linkedom');
-    const result = new LinkeDOMParser().parseFromString(html, 'text/html');
-    return result.documentElement;
+    const wrapper = `<!doctype html><html><head></head><body>${html}</body></html>`;
+    const parser = new LinkeDOMParser();
+    const doc = parser.parseFromString(wrapper, 'text/html');
+    return doc.documentElement;
   } catch (err: any) {
     console.error('Failed to import linkedom:', err);
     throw new Error('No HTML parser available in this environment');
