@@ -1,6 +1,4 @@
 import { InputSource, DomHashOptions } from '../types';
-// Cache dynamic import for LinkeDOMParser to avoid per-call overhead
-let linkedomModule: Promise<typeof import('linkedom')> | null = null;
 
 /**
  * Parses a provided input (HTML string, URL, DOM, or Element) into a root Element.
@@ -83,30 +81,18 @@ export async function parseInput(input: InputSource, options: DomHashOptions = {
 }
 
 async function parseHtml(html: string): Promise<Element> {
+  // Use DOMParser in browser-like environments
   if (typeof DOMParser !== 'undefined') {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     if (!doc.documentElement) throw new Error('Failed to parse HTML');
     return doc.documentElement;
   }
-
-  if (typeof HTMLRewriter !== 'undefined') {
-    const root = { tagName: 'html', children: [], appendChild: () => {} } as any;
-    const el = root;
-    const rewriter = new HTMLRewriter()
-      .on('*', {
-        element(e) {
-          const tag = e.tagName.toLowerCase();
-          const mock = { tagName: tag, children: [], getAttribute: () => null };
-          el.children.push(mock);
-        },
-      });
-    await rewriter.transform(new Response(html)).arrayBuffer();
-    return root;
-  }
-
-  // Fallback to LinkeDOM (Node.js environments)
-  if (!linkedomModule) linkedomModule = import('linkedom');
-  const linkedom = await linkedomModule;
-  const window = linkedom.parseHTML(html);
-  return window.document.documentElement;
+  // Fallback to LinkeDOM in Node.js; wrap snippet into full HTML document
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const linkedom = require('linkedom');
+  const wrapper = `<!doctype html><html><head></head><body>${html}</body></html>`;
+  const window = linkedom.parseHTML(wrapper);
+  const doc = window.document;
+  if (!doc || !doc.documentElement) throw new Error('Failed to parse HTML');
+  return doc.documentElement;
 }
