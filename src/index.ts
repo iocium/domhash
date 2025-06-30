@@ -1,5 +1,6 @@
 import { parseInput } from './core/parser';
 import { canonicalize } from './core/canonicalizer';
+import { canonicalizeString } from './core/htmlparser2Canonicalizer';
 import { hashStructure } from './core/hasher';
 import {
   computeResilienceScore,
@@ -44,8 +45,15 @@ export async function domhash(
   input: string | URL | Document | Element,
   options: DomHashOptions = {}
 ): Promise<DomHashResult> {
-  const dom = await parseInput(input, options);
-  const structure = canonicalize(dom, options);
+  let structure;
+  // Always parse the input into a DOM for layout and other APIs
+  const dom: Element = await parseInput(input, options);
+  // For raw HTML strings in Node (fast path), use htmlparser2 for canonicalization
+  if (typeof input === 'string' && input.trim().startsWith('<') && !options.usePuppeteer) {
+    structure = canonicalizeString(input, options);
+  } else {
+    structure = canonicalize(dom, options);
+  }
   const hash = await hashStructure(structure.canonical, options.algorithm || 'sha256');
 
   let layout = null;
