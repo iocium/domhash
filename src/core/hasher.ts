@@ -2,9 +2,15 @@ import murmurhash3 from './murmur3';
 import { blake3 } from '@noble/hashes/blake3';
 
 // Cache Node.js crypto and TextEncoder implementations at load time
+// Detect Node.js environment for conditional imports
+const isNode: boolean =
+  typeof process !== 'undefined' &&
+  process.versions != null &&
+  typeof process.versions.node === 'string';
+// Cache Node.js crypto and TextEncoder implementations when in Node.js
 let nodeCreateHash: ((algorithm: string) => import('crypto').Hash) | null = null;
 let NodeTextEncoder: typeof TextEncoder | null = null;
-if (typeof require === 'function') {
+if (isNode) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const crypto = require('crypto');
   nodeCreateHash = crypto.createHash;
