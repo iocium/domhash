@@ -58,4 +58,37 @@ describe('domhash', () => {
     const result = await domhash(html, { layoutAware: true });
     expect(result.layoutShape).toEqual(['div:block', 'span:block*3']);
   });
+  
+  it('respects inline styles for display, position, visibility, and opacity', async () => {
+    const div = document.createElement('div');
+    div.setAttribute(
+      'style',
+      'display:inline-block;position:relative;visibility:visible;opacity:0.3;'
+    );
+    document.body.appendChild(div);
+    const result = await domhash(div, { layoutAware: true });
+    // layoutCanonical should reflect all style properties and visibility flag
+    expect(result.layoutCanonical!).toBe('div:inline-block/relative/visible/0.3/V');
+    // layoutShape should capture the tag and display only
+    expect(result.layoutShape!).toEqual(['div:inline-block']);
+    document.body.removeChild(div);
+  });
+
+  it('marks elements hidden when display none, visibility hidden, or opacity zero', async () => {
+    const cases = [
+      { style: 'display:none;', hidden: true },
+      { style: 'visibility:hidden;', hidden: true },
+      { style: 'opacity:0;', hidden: true },
+    ];
+    for (const { style, hidden } of cases) {
+      const el = document.createElement('span');
+      el.setAttribute('style', style);
+      document.body.appendChild(el);
+      const result = await domhash(el, { layoutAware: true });
+      // layoutCanonical ends with /H when hidden, /V otherwise
+      const suffix = hidden ? '/H' : '/V';
+      expect(result.layoutCanonical!.endsWith(suffix)).toBe(true);
+      document.body.removeChild(el);
+    }
+  });
 });
