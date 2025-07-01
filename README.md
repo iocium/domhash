@@ -1,97 +1,107 @@
-# @iocium/domhash
+<!-- prettier-ignore -->
+# @iocium/domhash 🌀
 
-Structure-aware and layout-aware perceptual hashing for HTML/DOM trees. Robust similarity detection, diffs, and resilience scoring with flexible CLI and API.
+Structure- and layout-aware perceptual hashing for HTML/DOM trees.
+Quickly fingerprint, compare, diff, and score DOMs for robustness and similarity.
 
-[![npm version](https://badge.fury.io/js/%40iocium%2Fdomhash.svg)](https://www.npmjs.com/package/@iocium/domhash) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![CI](https://github.com/iocium/domhash/actions/workflows/test.yml/badge.svg)](https://github.com/iocium/domhash/actions)
+[![npm version](https://badge.fury.io/js/%40iocium%2Fdomhash.svg)](https://www.npmjs.com/package/@iocium/domhash)  
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)  
+[![CI](https://github.com/iocium/domhash/actions/workflows/test.yml/badge.svg)](https://github.com/iocium/domhash/actions)
 
-## Table of Contents
-
-- [Features](#features)
-- [Installation](#installation)
-- [CLI Usage](#cli-usage)
-- [Demo](https://iocium.github.io/domhash)
-- [API Docs](https://iocium.github.io/domhash/api)
-- [Examples](#examples)
-- [License](#license)
-
-## Features
-
-- Structural and visual similarity detection for DOM trees
-- Layout-aware canonicalization with run-length encoding of layout shapes
-- Run-length encoding (RLE) compression for shape vectors
-- Hidden element support: prefixes and collapsing of consecutive hidden tags
-- Flexible attribute handling: include/exclude data-*, aria-*, and custom attributes
-- Resilience scoring to detect brittle or obfuscated DOMs with detailed penalties
-- Support for perceptual hash algorithms: `sha256`, `murmur3`, `blake3`, `simhash`, `minhash`
-- Detailed structural diffs in Markdown/HTML output
-- Rich CLI and programmatic API
-- 100% test coverage and CI integration
-
-## Installation
+## 🚀 Quick Start
 
 ```bash
 npm install @iocium/domhash
 ```
 
-## CLI Usage
+### Programmatic API
 
-Usage:
-```bash
-npx domhash <command> [options]
+```ts
+import { domhash, computeResilienceScore, getStructuralDiff } from '@iocium/domhash';
+
+(async () => {
+  const result = await domhash('<div><span>Hello</span></div>', {
+    shapeVector: true,
+    layoutAware: true,
+    resilience: true,
+    algorithm: 'sha256',
+  });
+  console.log(result);
+})();
 ```
 
-Commands:
-
-  hash <input> [options]                Compute hash of a DOM input
-  compare <inputA> <inputB> [options]   Compare two DOM inputs (structural & shape)
-  diff <inputA> <inputB> [options]      Show structural differences between two inputs
-  shape <input> [options]               Output compressed shape vector of a DOM input
-  layout <input> [options]              Output layout shape vector and layout hash
-  resilience <input> [options]          Output resilience score and breakdown
-
-For detailed help on a specific command:
+### CLI Usage
 
 ```bash
-npx domhash <command> --help
-```
-### Puppeteer Options
-
-The following global options are available when connecting to a remote Chrome instance:
-
-- `--use-puppeteer`          Use Puppeteer and connect to an existing Chrome instance
-- `--browser-ws <endpoint>`  WebSocket Debugging URL (e.g., `ws://localhost:9222`) to connect
-- `--browser-url <url>`      HTTP Debugging URL (e.g., `http://localhost:9222`) to connect
-
-
-## Examples
-
-// Compare two pages and generate a Markdown report:
-
-```bash
-npx domhash compare page1.html page2.html --diff --output markdown > report.md
+npx domhash hash index.html                # Compute a DOM hash
+npx domhash compare a.html b.html          # Structural & shape compare
+npx domhash diff a.html b.html --output markdown  # Markdown diff report
+npx domhash layout index.html              # Layout shape vector + hash
+npx domhash resilience index.html          # Resilience score & breakdown
 ```
 
-## Profiling
+## ✨ Features
 
-We include a simple CPU profiling script to help identify hotspots in the core `domhash` function. It runs the demo HTML 100 times and captures a Chrome DevTools profile file.
+- ⚙️ **Multi-algo hashing**: `sha256`, `murmur3`, `blake3`, `simhash`, `minhash`
+- 📐 **Structure vectors**: run-length–encoded tag sequences for compact fingerprints
+- 🖼 **Layout vectors**: capture `display`, `position`, `visibility`, `opacity`, hide flags, with RLE compression
+- 💪 **Resilience scoring**: combined structural + layout penalties to gauge fragility vs robustness
+- 🔄 **Compare & diff**: Jaccard, LCS, cosine, TED metrics + Markdown/HTML diff outputs
+- 🔧 **Custom attributes**: include or exclude `data-*`, `aria-*`, or specific attributes
+- 🛠 **Flexible API**: CLI, ESM, CJS; works in Node, browser, and Cloudflare Workers
+- 🎨 **Formatters**: JSON, Markdown, HTML
+- ✅ **Fully tested**: 100% coverage + integration smoke tests
 
-1. Build the library:
-   ```bash
-   npm run build
-   ```
-2. Run the profiler:
-   ```bash
-   npm run profile
-   ```
-   This generates `profile.cpuprofile` in the project root.
-3. Open the profile in Chrome or Edge DevTools:
-   - In Chrome, go to `chrome://inspect` → **Memory** → **Load** and select `profile.cpuprofile`.
-   - Analyze the CPU flame chart to find your top functions.
+## 🔍 Examples
 
-## License
+### Structural Hash
 
-MIT License — see [LICENSE](LICENSE) for details.
+```ts
+import { domhash } from '@iocium/domhash';
+const res = await domhash('<ul><li>A</li><li>B</li></ul>', { shapeVector: true });
+console.log(res.shape); // ['ul','li*2']
+```
 
----
+### Layout-Aware Hash
 
-Made with 💙 by [iocium](https://github.com/iocium)
+```ts
+import { domhash } from '@iocium/domhash';
+const res = await domhash('<div><p>Test</p></div>', { layoutAware: true });
+console.log(res.layoutShape); // ['div:block','p:block']
+```
+
+### Resilience Score
+
+```ts
+import { domhash } from '@iocium/domhash';
+const res = await domhash('<div><span>Hi</span></div>', { resilience: true });
+console.log(res.resilienceScore, res.resilienceLabel); // 1.0 'Strong'
+```
+
+### Structural Diff
+
+```ts
+import { getStructuralDiff } from '@iocium/domhash';
+const diff = getStructuralDiff('<div><p>A</p></div>', '<div><span>B</span></div>');
+console.log(diff.join('\n'));
+```
+
+## ❓ FAQ
+
+**Q: What is the difference between structural vs layout vs resilience scores?**
+- **Structural**: tag variety, depth, repetition, leaf density.
+- **Layout**: element display/position/visibility/opacity flags describing visual flow.
+- **Resilience**: combined structural + layout penalties to detect brittle or obfuscated DOMs.
+
+**Q: Can I use this in Cloudflare Workers?**  
+Yes! The browser bundle uses Web Crypto, `DOMParser`, `TextEncoder`, and `fetch`, fully compatible with Workers.
+
+**Q: How do I include custom attributes?**  
+Use `includeAttributes: ['data-id', 'role']` or set `includeDataAndAriaAttributes: true` in options.
+
+**Q: Why use murmur3?**  
+Murmur3 is ultra-fast (32-bit) for quick comparisons; use SHA-256 or Blake3 for stronger guarantees.
+
+## 📄 License
+
+MIT © [iocium](https://github.com/iocium)
