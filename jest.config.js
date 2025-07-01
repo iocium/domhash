@@ -11,4 +11,5 @@ module.exports = {
   // ignore built artifacts
   modulePathIgnorePatterns: ["<rootDir>/dist/"],
   testPathIgnorePatterns: ["<rootDir>/dist/"],
+  setupFiles: ["<rootDir>/jest.setup.js"],
 };
