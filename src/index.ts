@@ -46,21 +46,29 @@ export async function domhash(
   options: DomHashOptions = {}
 ): Promise<DomHashResult> {
   let structure;
-  // Always parse the input into a DOM for layout and other APIs
-  const dom: Element = await parseInput(input, options);
-  // For raw HTML strings in Node (fast path), use htmlparser2 for canonicalization
-  if (typeof input === 'string' && input.trim().startsWith('<') && !options.usePuppeteer) {
+  // Fast-path: raw HTML string canonicalization (no DOM parsing) when not using Puppeteer,
+  // and not requiring layout or structureTree.
+  const isHtmlString =
+    typeof input === 'string' &&
+    input.trim().startsWith('<') &&
+    !options.usePuppeteer &&
+    !options.layoutAware &&
+    !options.shapeVector;
+  // DOM element only needed on the non-fast path
+  let dom: Element | undefined;
+  if (isHtmlString) {
     structure = canonicalizeString(input, options);
   } else {
+    dom = await parseInput(input, options);
     structure = canonicalize(dom, options);
   }
   const hash = await hashStructure(structure.canonical, options.algorithm || 'sha256');
 
   let layout = null;
   if (options.layoutAware) {
-    let layoutRoot: Element = dom;
-    if (typeof input === 'string' && dom.tagName.toLowerCase() === 'html') {
-      const body = dom.querySelector('body');
+    let layoutRoot: Element = dom!;
+    if (typeof input === 'string' && dom!.tagName.toLowerCase() === 'html') {
+      const body = dom!.querySelector('body');
       if (body && body.children.length === 1) {
         layoutRoot = body.children[0] as Element;
       }
@@ -73,7 +81,7 @@ export async function domhash(
   const rawLayoutShape = layout ? layout.map(f => `${f.tag}:${f.display}`) : undefined;
   const layoutShape = rawLayoutShape ? compressShapeVector(rawLayoutShape) : undefined;
 
-  const structureTree = options.shapeVector ? extractDOMStructureTree(dom) : undefined;
+  const structureTree = options.shapeVector ? extractDOMStructureTree(dom!) : undefined;
 
   const base = {
     hash,
