@@ -1,4 +1,3 @@
-<!-- prettier-ignore -->
 # @iocium/domhash 🌀
 
 Structure- and layout-aware perceptual hashing for HTML/DOM trees.
@@ -59,7 +58,7 @@ npx domhash resilience index.html          # Resilience score & breakdown
 ```ts
 import { domhash } from '@iocium/domhash';
 const res = await domhash('<ul><li>A</li><li>B</li></ul>', { shapeVector: true });
-console.log(res.shape); // ['ul','li*2']
+console.log(res.shape); // ['ul', 'li*2']
 ```
 
 ### Layout-Aware Hash
@@ -67,7 +66,7 @@ console.log(res.shape); // ['ul','li*2']
 ```ts
 import { domhash } from '@iocium/domhash';
 const res = await domhash('<div><p>Test</p></div>', { layoutAware: true });
-console.log(res.layoutShape); // ['div:block','p:block']
+console.log(res.layoutShape); // ['div:block', 'p:block']
 ```
 
 ### Resilience Score
