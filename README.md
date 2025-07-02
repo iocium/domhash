@@ -3,9 +3,7 @@
 Structure- and layout-aware perceptual hashing for HTML/DOM trees.
 Quickly fingerprint, compare, diff, and score DOMs for robustness and similarity.
 
-[![npm version](https://badge.fury.io/js/%40iocium%2Fdomhash.svg)](https://www.npmjs.com/package/@iocium/domhash)  
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)  
-[![CI](https://github.com/iocium/domhash/actions/workflows/test.yml/badge.svg)](https://github.com/iocium/domhash/actions)
+[![npm version](https://badge.fury.io/js/%40iocium%2Fdomhash.svg)](https://www.npmjs.com/package/@iocium/domhash) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![CI](https://github.com/iocium/domhash/actions/workflows/test.yml/badge.svg)](https://github.com/iocium/domhash/actions)
 
 ## 🚀 Quick Start
 
