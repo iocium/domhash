@@ -3,7 +3,13 @@
 Structure- and layout-aware perceptual hashing for HTML/DOM trees.
 Quickly fingerprint, compare, diff, and score DOMs for robustness and similarity.
 
-[![npm version](https://badge.fury.io/js/%40iocium%2Fdomhash.svg)](https://www.npmjs.com/package/@iocium/domhash) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![CI](https://github.com/iocium/domhash/actions/workflows/test.yml/badge.svg)](https://github.com/iocium/domhash/actions)
+[![npm](https://img.shields.io/npm/v/@iocium/domhash)](https://www.npmjs.com/package/@iocium/domhash)
+[![build](https://github.com/iocium/favicon-fetcher/actions/workflows/test.yml/badge.svg)](https://github.com/iocium/favicon-fetcher/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/iocium/favicon-fetcher/branch/main/graph/badge.svg)](https://codecov.io/gh/iocium/favicon-fetcher)
+[![npm downloads](https://img.shields.io/npm/dm/@iocium/domhash)](https://www.npmjs.com/package/@iocium/domhash)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@iocium/domhash)](https://bundlephobia.com/package/@iocium/domhash)
+[![types](https://img.shields.io/npm/types/@iocium/domhash)](https://www.npmjs.com/package/@iocium/domhash)
+[![license](https://img.shields.io/npm/l/@iocium/domhash)](https://github.com/iocium/favicon-fetcher/blob/main/LICENSE)
 
 ## 🚀 Quick Start
 
