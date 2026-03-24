@@ -59,6 +59,6 @@
     "miniflare": "^4.20250617.4",
     "ts-jest": "^29.4.0",
     "tsup": "^8.5.0",
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.2"
   }
 }
