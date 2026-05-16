@@ -46,7 +46,7 @@
     "commander": "^14.0.0",
     "diff": "^9.0.0",
     "linkedom": "^0.18.11",
-    "puppeteer-core": "^24.11.2",
+    "puppeteer-core": "^25.0.2",
     "typedoc": "^0.28.7"
   },
   "devDependencies": {
