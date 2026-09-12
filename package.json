@@ -56,7 +56,7 @@
     "auto-changelog": "^2.5.0",
     "jest": "^30.0.3",
     "jest-environment-jsdom": "^30.0.2",
-    "miniflare": "^4.20250617.4",
+    "miniflare": "^5.20260911.0-alpha",
     "ts-jest": "^29.4.0",
     "tsup": "^8.5.0",
     "typescript": "^7.0.2"
