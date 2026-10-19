@@ -58,7 +58,7 @@
     "jest-environment-jsdom": "^30.0.2",
     "miniflare": "^5.20260911.0-alpha",
     "ts-jest": "^29.4.0",
-    "tsup": "^8.5.0",
+    "tsup": "^9.0.0",
     "typescript": "^7.0.2"
   }
 }
