@@ -21,8 +21,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup",
-    "test": "node ./scripts/runTests.js",
-    "test:coverage": "node ./scripts/runTests.js --coverage",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
     "typecheck": "tsc --noEmit",
     "docs": "typedoc",
     "profile": "node scripts/profile.js",
@@ -51,14 +51,11 @@
   },
   "devDependencies": {
     "@types/bun": "^1.2.17",
-    "@types/jest": "^30.0.0",
     "@types/node": "^26.0.0",
     "auto-changelog": "^2.5.0",
-    "jest": "^30.0.3",
-    "jest-environment-jsdom": "^30.0.2",
+    "jsdom": "^26.0.0",
     "miniflare": "^5.20260911.0-alpha",
-    "ts-jest": "^29.4.0",
     "tsup": "^9.0.0",
-    "typescript": "^7.0.2"
+    "typescript": "^5.8.2"
   }
 }

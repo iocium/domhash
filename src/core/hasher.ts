@@ -1,5 +1,5 @@
 import murmurhash3 from './murmur3';
-import { blake3 } from '@noble/hashes/blake3';
+import { blake3 } from '@noble/hashes/blake3.js';
 
 // Cache Node.js crypto and TextEncoder implementations at load time
 // Detect Node.js environment for conditional imports

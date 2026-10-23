@@ -1,3 +1,4 @@
+import { describe, expect, it, beforeAll, afterAll } from 'bun:test';
 import { extractLayoutFeatures, serializeLayoutFeatures, computeResilienceScore, computeStructuralScore } from '../../src/core/layout';
 
 describe('extractLayoutFeatures and serializeLayoutFeatures', () => {

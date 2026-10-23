@@ -116,7 +116,8 @@ export async function domhash(
 }
 
 export * from './compare/metrics';
-export { computeResilienceScore, ResilienceBreakdown } from './core/layout';
+export { computeResilienceScore } from './core/layout';
+export type { ResilienceBreakdown } from './core/layout';
 export type { DomHashOptions, DomHashResult } from './types';
 export { getStructuralDiff } from './format';
 

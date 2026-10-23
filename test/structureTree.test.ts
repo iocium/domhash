@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test';
 import { extractDOMStructureTree } from '../src/core/structureTree';
 
 describe('extractDOMStructureTree', () => {

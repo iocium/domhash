@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test';
 import { formatResult, getStructuralDiff } from '../src/format';
 
 describe('formatResult', () => {

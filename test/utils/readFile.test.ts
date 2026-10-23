@@ -1,3 +1,4 @@
+import { describe, expect, it, beforeAll, afterAll, jest } from 'bun:test';
 import { readFile } from '../../src/utils/readFile';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -49,17 +50,12 @@ describe('readFile', () => {
   
   describe('Bun file support', () => {
     it('uses Bun.file when available', async () => {
-      (global as any).Bun = {
-        file: (filePath: string) => {
-          void filePath;
-          return {
-            text: async () => '<bun-content>'
-          };
-        }
-      };
-      const result = await readFile('any-path');
-      expect(result).toBe('<bun-content>');
-      delete (global as any).Bun;
+      const tmpFile = path.resolve(__dirname, 'bun-test.html');
+      const html = '<bun-content></bun-content>';
+      fs.writeFileSync(tmpFile, html, 'utf8');
+      const result = await readFile(tmpFile);
+      expect(result).toBe(html);
+      fs.unlinkSync(tmpFile);
     });
   });
 });

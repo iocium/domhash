@@ -1,3 +1,4 @@
+import { describe, expect, it, beforeAll, afterAll, jest } from 'bun:test';
 import { parseInput } from '../../src/core/parser';
 
 describe('parseInput', () => {

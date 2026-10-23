@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test';
 import { domhash } from '../src/index';
 
 describe('domhash', () => {
@@ -23,8 +24,8 @@ describe('domhash', () => {
     expect(result.structuralBreakdown).toHaveProperty('depthPenalty');
     expect(result.structuralBreakdown).toHaveProperty('repetitionPenalty');
     expect(result.structuralBreakdown).toHaveProperty('leafPenalty');
-    expect(['Strong', 'Moderate', 'Fragile']).toContain(result.structuralLabel);
-    expect(['✅', '⚠️', '❌']).toContain(result.structuralEmoji);
+    expect(['Strong', 'Moderate', 'Fragile']).toContain(result.structuralLabel!);
+    expect(['✅', '⚠️', '❌']).toContain(result.structuralEmoji!);
   });
 
   it('computes resilience when enabled', async () => {
@@ -33,8 +34,8 @@ describe('domhash', () => {
     const result = await domhash(div, { shapeVector: true, resilience: true });
     expect(result.resilienceScore).toBeGreaterThanOrEqual(0);
     expect(result.resilienceScore).toBeLessThanOrEqual(1);
-    expect(['Strong', 'Moderate', 'Fragile']).toContain(result.resilienceLabel);
-    expect(['✅', '⚠️', '❌']).toContain(result.resilienceEmoji);
+    expect(['Strong', 'Moderate', 'Fragile']).toContain(result.resilienceLabel!);
+    expect(['✅', '⚠️', '❌']).toContain(result.resilienceEmoji!);
   });
   
   it('computes layout features when layoutAware is enabled', async () => {

@@ -1,7 +1,8 @@
+import { describe, expect, it, beforeAll, afterAll } from 'bun:test';
 import { hashStructure } from '../../src/core/hasher';
 import { TextEncoder } from 'util';
 import murmurhash3 from '../../src/core/murmur3';
-import { blake3 } from '@noble/hashes/blake3';
+import { blake3 } from '@noble/hashes/blake3.js';
 import { createHash } from 'crypto';
 
 describe('hashStructure', () => {

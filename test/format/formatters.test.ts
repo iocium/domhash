@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test';
 import { formatAsJSON } from '../../src/format/jsonFormatter';
 import { formatAsMarkdown } from '../../src/format/markdownFormatter';
 import { formatAsHTML } from '../../src/format/htmlFormatter';
