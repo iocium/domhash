@@ -41,6 +41,9 @@
   ],
   "author": "iocium",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@noble/hashes": "^2.2.0",
     "commander": "^15.0.0",
