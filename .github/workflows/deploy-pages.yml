@@ -16,17 +16,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build docs
-        run: npm run docs
+        run: bun run docs
 
       - name: Build @iocium/domhash
-        run: npm run build
+        run: bun run build
 
       - name: Copy demo page and library
         run: |
