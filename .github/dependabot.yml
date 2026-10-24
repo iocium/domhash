@@ -1,5 +1,12 @@
 version: 2
 updates:
+  - package-ecosystem: "bun"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    assignees:
+      - "matthewgall"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
