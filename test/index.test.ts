@@ -57,7 +57,7 @@ describe('domhash', () => {
   it('compresses duplicate layout shapes correctly', async () => {
     const html = '<div><span></span><span></span><span></span></div>';
     const result = await domhash(html, { layoutAware: true });
-    expect(result.layoutShape).toEqual(['div:block', 'span:block*3']);
+    expect(result.layoutShape).toEqual(['div:block', 'span:inline*3']);
   });
   
   it('respects inline styles for display, position, visibility, and opacity', async () => {
