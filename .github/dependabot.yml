@@ -7,6 +7,12 @@ updates:
     open-pull-requests-limit: 10
     assignees:
       - "matthewgall"
+    ignore:
+      # TypeScript 7 drops the compiler API from the `typescript` entry point,
+      # which breaks tsup's declaration build and TypeDoc.
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
