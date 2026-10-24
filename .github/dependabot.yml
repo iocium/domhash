@@ -3,20 +3,33 @@ updates:
   - package-ecosystem: "bun"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     assignees:
       - "matthewgall"
+    groups:
+      dependencies:
+        patterns:
+          - "*"
     ignore:
       # TypeScript 7 drops the compiler API from the `typescript` entry point,
       # which breaks tsup's declaration build and TypeDoc.
       - dependency-name: "typescript"
         update-types:
           - "version-update:semver-major"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     assignees:
       - "matthewgall"
+    groups:
+      dependencies:
+        patterns:
+          - "*"
