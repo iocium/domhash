@@ -19,6 +19,18 @@ if (isNode) {
   NodeTextEncoder = util.TextEncoder || null;
 }
 
+/**
+ * Hash a canonical structure string.
+ *
+ * @param input - Canonical string to hash
+ * @param algo - Hash algorithm. `sha256` and `blake3` are cryptographic and
+ *   safe for security-sensitive comparisons. `murmur3`, `simhash`, and
+ *   `minhash` are fast 32-bit NON-CRYPTOGRAPHIC hashes intended for
+ *   perceptual similarity only: an attacker can search for colliding input
+ *   in ~2^32 attempts, so never rely on them to authenticate or compare
+ *   security-sensitive content.
+ * @returns Promise resolving to the hex hash string
+ */
 export async function hashStructure(input: string, algo: 'sha256' | 'murmur3' | 'blake3' | 'simhash' | 'minhash' = 'sha256'): Promise<string> {
   // Fast path for string-based hashes that don't require encoding
   switch (algo) {

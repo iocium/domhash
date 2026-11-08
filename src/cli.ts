@@ -4,6 +4,8 @@ import { domhash } from './index';
 import {
   compareStructures,
   compareShapeJaccard,
+  compareShapeJaccardGuarded,
+  shapeLengthRatio,
   compareShapeLCS,
   compareShapeCosine,
   compareTreeEditDistance,
@@ -21,6 +23,8 @@ program
   .command('hash <input>')
   .description('Compute hash of a DOM input')
   .option('-i, --include-attrs <attrs>', 'Comma-separated list of attributes to include', parseAttrList)
+  .option('-v, --include-value-attrs <attrs>', 'Comma-separated list of attributes whose VALUES are also included (e.g. href,src,action)', parseAttrList)
+  .option('--normalize-text', 'Perceptual text normalization (NFKC, zero-width removal, whitespace collapse)', false)
   .option('-a, --algorithm <type>', 'Hashing algorithm: sha256, murmur3, blake3, simhash, minhash', 'sha256')
   .option('-s, --shape-vector', 'Output compressed shape vector (run-length encoded)', false)
   .option('-l, --layout-aware', 'Enable layout-aware hashing', false)
@@ -37,6 +41,8 @@ program
       const domOptions: any = {
         algorithm: opts.algorithm,
         includeAttributes: opts.includeAttrs,
+        includeAttributeValues: opts.includeValueAttrs,
+        normalizeText: opts.normalizeText,
         shapeVector: opts.shapeVector,
         layoutAware: opts.layoutAware,
         resilience: opts.resilience,
@@ -77,13 +83,15 @@ program
   .command('compare <inputA> <inputB>')
   .description('Compare two DOM inputs')
   .option('-i, --include-attrs <attrs>', 'Comma-separated list of attributes to include', parseAttrList)
+  .option('-v, --include-value-attrs <attrs>', 'Comma-separated list of attributes whose VALUES are also included (e.g. href,src,action)', parseAttrList)
+  .option('--normalize-text', 'Perceptual text normalization (NFKC, zero-width removal, whitespace collapse)', false)
   .option('-a, --algorithm <type>', 'Hashing algorithm: sha256, murmur3, blake3, simhash, minhash', 'sha256')
   .option('-s, --shape-vector', 'Output compressed shape vector (run-length encoded)', false)
   .option('-l, --layout-aware', 'Enable layout-aware hashing', false)
   .option('--use-puppeteer', 'Connect to an existing Chrome via Puppeteer', false)
   .option('--browser-ws <wsEndpoint>', 'WebSocket endpoint to connect to Chrome')
   .option('--browser-url <browserURL>', 'HTTP endpoint to connect to Chrome')
-  .option('-m, --shape-metric <type>', 'Shape similarity metric: jaccard (default), lcs, cosine, ted', 'jaccard')
+  .option('-m, --shape-metric <type>', 'Shape similarity metric: jaccard (default), jaccard-guarded, lcs, cosine, ted', 'jaccard')
   .option('-d, --diff', 'Show structural diff between inputs', false)
   .option('-o, --output <format>', 'Output format: json, markdown, html')
   .action(async (...args) => {
@@ -96,6 +104,8 @@ program
       const domOptions: any = {
         algorithm: opts.algorithm,
         includeAttributes: opts.includeAttrs,
+        includeAttributeValues: opts.includeValueAttrs,
+        normalizeText: opts.normalizeText,
         shapeVector: opts.shapeVector,
         layoutAware: opts.layoutAware,
         usePuppeteer: opts.usePuppeteer
@@ -116,6 +126,9 @@ program
         switch (opts.shapeMetric) {
           case 'jaccard':
             shapeSimilarity = compareShapeJaccard(resultA.shape, resultB.shape);
+            break;
+          case 'jaccard-guarded':
+            shapeSimilarity = compareShapeJaccardGuarded(resultA.shape, resultB.shape);
             break;
           case 'lcs':
             shapeSimilarity = compareShapeLCS(resultA.shape, resultB.shape);
@@ -158,12 +171,19 @@ program
         if (shapeSimilarity !== undefined) {
           const labelMap: Record<string,string> = {
             jaccard: 'Jaccard',
+            'jaccard-guarded': 'Jaccard (length-guarded)',
             lcs: 'LCS',
             cosine: 'Cosine',
             ted: 'Tree Edit Distance'
           };
           const label = labelMap[opts.shapeMetric] || opts.shapeMetric;
           console.log(`Shape similarity (${label}):`, (shapeSimilarity * 100).toFixed(2) + '%');
+          // With plain Jaccard, a long shared run can dilute injected content,
+          // so surface the length ratio alongside it.
+          if (opts.shapeMetric === 'jaccard') {
+            const ratio = shapeLengthRatio(resultA.shape!, resultB.shape!);
+            console.log(`Shape length ratio:`, (ratio * 100).toFixed(2) + '%');
+          }
         }
         if (opts.diff && comparison.diff) {
           console.log('\nStructural Diff:');
