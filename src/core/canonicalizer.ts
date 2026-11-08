@@ -1,6 +1,6 @@
 import { DomHashOptions } from '../types';
 import { normalizeCanonicalText } from './text';
-import { normalizeAttributeValue } from './attributeValues';
+import { canonicalAttributeTokens } from './attributes';
 
 export interface CanonicalizeResult {
   canonical: string;
@@ -14,35 +14,13 @@ export function canonicalize(root: Element, options: DomHashOptions = {}): Canon
   let tagCount = 0;
   let maxDepth = 0;
 
-  const includeAttrs = options.includeAttributes?.map(a => a.toLowerCase()) || [];
-  const includeValues = new Set(
-    (options.includeAttributeValues || []).map(a => a.toLowerCase())
-  );
   const parts: string[] = [];
 
   function attributeTokens(node: Element): string {
-    const attrs = Array.from(node.attributes).map(
-      attr => [attr.name.toLowerCase(), attr.value] as const
+    return canonicalAttributeTokens(
+      Array.from(node.attributes).map(attr => [attr.name, attr.value] as const),
+      options
     );
-    const names = attrs
-      .map(([name]) => name)
-      .filter(name => {
-        if (!options.includeDataAndAriaAttributes && (name.startsWith('data-') || name.startsWith('aria-'))) return false;
-        if (includeAttrs.length > 0) return includeAttrs.includes(name);
-        return true;
-      })
-      .sort();
-
-    return names
-      .map(name => {
-        if (includeValues.size > 0 && includeValues.has(name)) {
-          const attr = attrs.find(a => a[0] === name);
-          const value = attr ? normalizeAttributeValue(attr[1]) : '';
-          if (value !== '') return `${name}~${value}`;
-        }
-        return name;
-      })
-      .join(' ');
   }
 
   function traverse(node: Element, depth: number): void {

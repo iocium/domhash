@@ -46,14 +46,13 @@ describe('includeAttributeValues (e2e)', () => {
   });
 
   it('works through the DOM path (Element input) identically to the string path', async () => {
-    // Uses linkedom (no implicit tree construction) so the tree matches the
-    // fast path exactly. Browsers/jsdom insert implicit <head>/<tbody>, which
-    // is covered as a documented divergence in test/core/consistency.test.ts.
+    // jsdom follows the HTML5 tree construction algorithm, exactly like the
+    // parse5-based fast path, so a browser-DOM hash equals a string hash.
     const opts = { includeAttributeValues: ['href'] };
     const fromString = await domhash(good, opts);
-    const { parseHTML } = await import('linkedom');
-    const { window } = parseHTML(good);
-    const fromElement = await domhash(window.document.documentElement, opts);
+    const { window } = (globalThis as any);
+    const doc = new window.DOMParser().parseFromString(good, 'text/html');
+    const fromElement = await domhash(doc.documentElement, opts);
     expect(fromElement.hash).toBe(fromString.hash);
   });
 });

@@ -121,7 +121,7 @@ npx domhash compare a.html b.html -s -m jaccard-guarded
 
 **Rendering executes JavaScript.** `usePuppeteer` renders untrusted HTML in a real browser, so the page's scripts run and can mutate the DOM before hashing (including mutating it back to a known-good value). Prefer the default fetch-and-parse path when hashing untrusted input.
 
-**Use one input mode consistently.** Text normalization is now identical across the string fast path and the DOM path, but browsers (and jsdom) follow the HTML5 tree construction algorithm and insert implicit elements (`<head>`, `<tbody>`) that the string fast path — and linkedom — do not. The same source document can therefore hash differently depending on whether you pass a string or a browser `Document`. For tamper detection, hash baseline and monitored pages the same way (both strings, or both rendered DOMs).
+**String input matches browser DOM input.** The string path parses with parse5, the WHATWG HTML5 tree construction algorithm that browsers (and jsdom) implement, so the same source document hashes identically whether passed as a string or as a browser `Document` — including implicit elements (`<head>`, `<tbody>`). The one remaining exception is the Node.js URL-fetch fallback (linkedom), which performs no tree construction; if you hash fetched URLs in Node, compare them against other fetched URLs, not against rendered DOMs. Bare snippets are parsed as full documents (wrapped in `html/head/body`), matching what a browser `DOMParser` does.
 
 ## ❓ FAQ
 

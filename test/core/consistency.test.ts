@@ -1,15 +1,20 @@
 import { describe, expect, it } from 'bun:test';
-import { canonicalizeString } from '../../src/core/htmlparser2Canonicalizer';
+import { canonicalizeString } from '../../src/core/parse5Canonicalizer';
 import { canonicalize } from '../../src/core/canonicalizer';
 import { parseHTML } from 'linkedom';
 import { JSDOM } from 'jsdom';
 
 /**
- * The string fast path (htmlparser2) and the DOM path (Element traversal)
- * must produce identical canonical output for the same document, no matter
- * which DOM implementation built the tree. These cases are regression tests
- * for historical divergences: entity-adjacent spaces, NBSP handling,
- * control whitespace, and parser-specific text-node splitting.
+ * The string fast path (parse5) and the DOM path (Element traversal) must
+ * produce identical canonical output for the same document, no matter which
+ * DOM implementation built the tree. parse5 implements the WHATWG tree
+ * construction algorithm, so it matches browsers/jsdom exactly; linkedom
+ * (the older Node fallback) still lacks implicit `<tbody>` insertion, which
+ * is why the table case only runs against jsdom here.
+ *
+ * These cases are regression tests for historical divergences: entity-
+ * adjacent spaces, NBSP handling, control whitespace, and parser-specific
+ * text-node splitting.
  */
 
 const WRAP = (c: string) => `<!doctype html><html><head></head><body>${c}</body></html>`;
@@ -48,14 +53,14 @@ const CASES: string[] = [
   '<div><a href="rel/path?q=1">l</a></div>',
 ];
 
-// Table markup: browsers/jsdom insert an implicit <tbody> (see the documented
-// divergence test below), but linkedom — like the htmlparser2 fast path —
-// performs no tree construction, so it is included in the linkedom battery.
 const TABLE_CASE = '<div><table><tr><td>c</td></tr></table></div>';
 
 describe('fast path vs DOM path consistency', () => {
   it('produces identical canonical output across all regression cases (linkedom DOM)', () => {
-    for (const c of [...CASES, TABLE_CASE]) {
+    // linkedom performs no spec-compliant tree construction, so it is still
+    // missing the implicit <tbody> that parse5 (and browsers) insert; the
+    // table case is covered against jsdom below instead.
+    for (const c of CASES) {
       const full = WRAP(c);
       const fast = canonicalizeString(full);
       const { window } = parseHTML(full);
@@ -68,12 +73,9 @@ describe('fast path vs DOM path consistency', () => {
   });
 
   it('produces identical canonical output across all regression cases (jsdom DOM)', () => {
-    // jsdom implements spec-compliant implicit tree construction, so cases
-    // that rely on it (e.g. <tbody> insertion in tables) are covered by a
-    // separate documented-divergence test below.
     const { window } = new JSDOM(WRAP('<div></div>'));
     const parser = new window.DOMParser();
-    for (const c of CASES) {
+    for (const c of [...CASES, TABLE_CASE]) {
       const full = WRAP(c);
       const fast = canonicalizeString(full);
       const doc = parser.parseFromString(full, 'text/html');
@@ -85,18 +87,28 @@ describe('fast path vs DOM path consistency', () => {
     }
   });
 
-  it('documents the known divergence: browsers insert implicit elements the fast path does not', () => {
-    // jsdom (and real browser DOMParsers) follow the HTML5 tree construction
-    // algorithm: <tbody> is inserted into <table>, <head> into <html>.
-    // The htmlparser2 fast path does no tree construction. Canonical output
-    // differs for documents that rely on implicit elements, so hashers must
-    // use one input mode consistently per deployment (see README).
+  it('inserts implicit elements identically to browsers (table case)', () => {
+    // parse5 follows the HTML5 tree construction algorithm, so the fast path
+    // now inserts the implicit <tbody> exactly like jsdom/real browsers do.
     const { window } = new JSDOM(WRAP('<div></div>'));
-    const doc = new window.DOMParser().parseFromString(WRAP('<div><table><tr><td>c</td></tr></table></div>'), 'text/html');
+    const doc = new window.DOMParser().parseFromString(WRAP(TABLE_CASE), 'text/html');
     const slow = canonicalize(doc.documentElement);
-    const fast = canonicalizeString(WRAP('<div><table><tr><td>c</td></tr></table></div>'));
-    expect(slow.canonical).toContain('<tbody>');
-    expect(fast.canonical).not.toContain('<tbody>');
+    const fast = canonicalizeString(WRAP(TABLE_CASE));
+    expect(fast.canonical).toContain('<tbody>');
+    expect(fast.canonical).toBe(slow.canonical);
+  });
+
+  it('wraps snippet input into a full document, matching the DOM path', () => {
+    // Passing a bare snippet as a string now parses it as a full document
+    // (html/head/body), exactly like DOMParser in a browser — previously the
+    // fast path hashed the snippet as-is, diverging from browser DOM input.
+    const snippet = '<div><span>Hi</span></div>';
+    const { window } = new JSDOM(WRAP('<div></div>'));
+    const doc = new window.DOMParser().parseFromString(snippet, 'text/html');
+    const fromElement = canonicalize(doc.documentElement);
+    const fromString = canonicalizeString(snippet);
+    expect(fromString.canonical).toContain('<html>');
+    expect(fromString.canonical).toBe(fromElement.canonical);
   });
 
   it('keeps entity-adjacent spaces (the original divergence)', () => {
