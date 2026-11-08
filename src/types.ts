@@ -53,6 +53,17 @@ export type InputSource = string | URL | Document | Element;
  *                                   process. This is useful for handling cross-origin 
  *                                   requests and ensuring that all necessary resources 
  *                                   are accessible.
+ * @property {string[]} [includeAttributeValues] - An optional array of attribute 
+ *          names whose *values* should be included in the hash (normalized: URL 
+ *          scheme/host lowercased, fragments dropped, whitespace collapsed). By 
+ *          default only attribute names are hashed, so changing an `href` or 
+ *          `src` does not change the hash. Use e.g. `['href', 'src', 'action']`
+ *          when link/script destinations must affect the fingerprint.
+ * @property {boolean} [normalizeText] - An optional boolean flag that enables 
+ *          perceptual text normalization: Unicode NFKC, removal of invisible 
+ *          zero-width characters, and whitespace collapsing. Off by default so
+ *          strict hashes stay stable; enable it when comparing visually 
+ *          equivalent pages.
  */
 export interface DomHashOptions {
   algorithm?: 'sha256' | 'murmur3' | 'blake3' | 'simhash' | 'minhash';
@@ -77,6 +88,20 @@ export interface DomHashOptions {
     browserWSEndpoint?: string;
     browserURL?: string;
   };
+  /**
+   * Attribute names whose values (not just names) are included in the
+   * canonical string. Values are normalized before hashing: URL scheme and
+   * host are lowercased, fragments are dropped, whitespace is collapsed.
+   * An attribute only gets its value hashed if its name is also included in
+   * the canonical string (i.e. it passes the `includeAttributes` filter when
+   * that is set).
+   */
+  includeAttributeValues?: string[];
+  /**
+   * When true, text nodes are perceptually normalized (Unicode NFKC, zero-
+   * width character removal, whitespace collapsing) before canonicalization.
+   */
+  normalizeText?: boolean;
 }
 
 /**

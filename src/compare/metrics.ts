@@ -12,6 +12,33 @@ export function compareShapeJaccard(a: string[], b: string[]): number {
   return union.size === 0 ? 1 : intersection.length / union.size;
 }
 
+/**
+ * Ratio of the shorter vector's length to the longer one's.
+ * @param a - First shape vector
+ * @param b - Second shape vector
+ * @returns 1 when both have the same length, 0 when one is empty and the other is not
+ */
+export function shapeLengthRatio(a: string[], b: string[]): number {
+  const max = Math.max(a.length, b.length);
+  return max === 0 ? 1 : Math.min(a.length, b.length) / max;
+}
+
+/**
+ * Jaccard similarity with a length-ratio guard:
+ * `min(jaccard, min(len)/max(len))`.
+ *
+ * Plain Jaccard on run-length-encoded shape vectors can be diluted: padding
+ * both vectors with a long shared run keeps Jaccard high even when one side
+ * has injected content. The length-ratio term keeps the score bounded by how
+ * differently sized the two structures are.
+ * @param a - First shape vector
+ * @param b - Second shape vector
+ * @returns similarity score between 0 and 1
+ */
+export function compareShapeJaccardGuarded(a: string[], b: string[]): number {
+  return Math.min(compareShapeJaccard(a, b), shapeLengthRatio(a, b));
+}
+
 export function compareShapeLCS(a: string[], b: string[]): number {
   const m = a.length, n = b.length;
   const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
@@ -66,17 +93,19 @@ export function compareTreeEditDistance(a: string[], b: string[]): number {
  * Compare two layout shape vectors using the specified similarity metric.
  * @param a - First layout shape vector
  * @param b - Second layout shape vector
- * @param metric - Similarity metric: 'jaccard' | 'lcs' | 'cosine' | 'ted'
+ * @param metric - Similarity metric: 'jaccard' | 'jaccard-guarded' | 'lcs' | 'cosine' | 'ted'
  * @returns similarity score between 0 and 1
  */
 export function compareLayoutVectors(
   a: string[],
   b: string[],
-  metric: 'jaccard' | 'lcs' | 'cosine' | 'ted' = 'jaccard'
+  metric: 'jaccard' | 'jaccard-guarded' | 'lcs' | 'cosine' | 'ted' = 'jaccard'
 ): number {
   switch (metric) {
     case 'jaccard':
       return compareShapeJaccard(a, b);
+    case 'jaccard-guarded':
+      return compareShapeJaccardGuarded(a, b);
     case 'lcs':
       return compareShapeLCS(a, b);
     case 'cosine':
