@@ -1,6 +1,6 @@
 import { parseInput } from './core/parser';
 import { canonicalize } from './core/canonicalizer';
-import { canonicalizeString } from './core/htmlparser2Canonicalizer';
+import { canonicalizeString } from './core/parse5Canonicalizer';
 import { hashStructure } from './core/hasher';
 import {
   computeResilienceScore,

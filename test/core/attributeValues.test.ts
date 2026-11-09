@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { normalizeAttributeValue } from '../../src/core/attributeValues';
-import { canonicalizeString } from '../../src/core/htmlparser2Canonicalizer';
+import { canonicalizeString } from '../../src/core/parse5Canonicalizer';
 
 describe('normalizeAttributeValue', () => {
   it('collapses whitespace and trims', () => {

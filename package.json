@@ -49,6 +49,7 @@
     "commander": "^15.0.0",
     "diff": "^9.0.0",
     "linkedom": "^0.18.11",
+    "parse5": "^8.1.1",
     "puppeteer-core": "^25.0.2",
     "typedoc": "^0.28.7"
   },
