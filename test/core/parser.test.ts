@@ -78,7 +78,7 @@ describe('parseInput', () => {
     });
   });
   });
-  describe('parseHtml via linkedom fallback', () => {
+  describe('parseHtml via parse5 fallback', () => {
     let originalDOMParser: any;
     beforeAll(() => {
       originalDOMParser = (global as any).DOMParser;
@@ -87,10 +87,24 @@ describe('parseInput', () => {
     afterAll(() => {
       (global as any).DOMParser = originalDOMParser;
     });
-    it('parses HTML using linkedom when DOMParser and HTMLRewriter are unavailable', async () => {
+    it('parses HTML using parse5 when DOMParser is unavailable', async () => {
       const el = await parseInput('<div><span>link</span></div>');
       expect(el.tagName.toLowerCase()).toBe('html');
       expect(el.querySelector('span')?.textContent).toBe('link');
+    });
+
+    it('performs spec-compliant tree construction in the fallback', async () => {
+      // Implicit <head> and <tbody> insertion, matching browsers/jsdom.
+      const el = await parseInput('<div><table><tr><td>c</td></tr></table></div>');
+      expect(el.querySelector('head')).not.toBeNull();
+      expect(el.querySelector('tbody')).not.toBeNull();
+      expect(el.querySelector('td')?.textContent).toBe('c');
+    });
+
+    it('wraps snippets into a full document in the fallback', async () => {
+      const el = await parseInput('<p>hi</p>');
+      expect(el.tagName.toLowerCase()).toBe('html');
+      expect(el.querySelector('p')?.textContent).toBe('hi');
     });
   });
   
