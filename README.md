@@ -121,7 +121,7 @@ npx domhash compare a.html b.html -s -m jaccard-guarded
 
 **Rendering executes JavaScript.** `usePuppeteer` renders untrusted HTML in a real browser, so the page's scripts run and can mutate the DOM before hashing (including mutating it back to a known-good value). Prefer the default fetch-and-parse path when hashing untrusted input.
 
-**String input matches browser DOM input.** The string path parses with parse5, the WHATWG HTML5 tree construction algorithm that browsers (and jsdom) implement, so the same source document hashes identically whether passed as a string or as a browser `Document` — including implicit elements (`<head>`, `<tbody>`). The one remaining exception is the Node.js URL-fetch fallback (linkedom), which performs no tree construction; if you hash fetched URLs in Node, compare them against other fetched URLs, not against rendered DOMs. Bare snippets are parsed as full documents (wrapped in `html/head/body`), matching what a browser `DOMParser` does.
+**All input modes hash identically.** Every path that parses HTML — the string path, the Node.js URL-fetch fallback, and browser `Document` input — uses the WHATWG HTML5 tree construction algorithm (parse5, the same algorithm browsers and jsdom implement), so the same source document hashes identically no matter how you feed it in, including implicit elements (`<head>`, `<tbody>`). Bare snippets are parsed as full documents (wrapped in `html/head/body`), matching what a browser `DOMParser` does. Note: in plain Node the fallback returns a minimal element adapter (see `src/core/parse5Element.ts`) — enough for hashing, with a simple `querySelector` (`tag`, `#id`, `.class`).
 
 ## ❓ FAQ
 

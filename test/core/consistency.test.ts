@@ -1,20 +1,19 @@
 import { describe, expect, it } from 'bun:test';
 import { canonicalizeString } from '../../src/core/parse5Canonicalizer';
 import { canonicalize } from '../../src/core/canonicalizer';
-import { parseHTML } from 'linkedom';
+import { parseInput } from '../../src/core/parser';
 import { JSDOM } from 'jsdom';
 
 /**
- * The string fast path (parse5) and the DOM path (Element traversal) must
- * produce identical canonical output for the same document, no matter which
- * DOM implementation built the tree. parse5 implements the WHATWG tree
- * construction algorithm, so it matches browsers/jsdom exactly; linkedom
- * (the older Node fallback) still lacks implicit `<tbody>` insertion, which
- * is why the table case only runs against jsdom here.
+ * The string fast path (parse5), the DOM path (Element traversal), and the
+ * Node fallback (parseInput without DOMParser, parse5 + Parse5Element
+ * adapter) must all produce identical canonical output for the same
+ * document. parse5 implements the WHATWG tree construction algorithm, so
+ * every path matches browsers/jsdom exactly.
  *
  * These cases are regression tests for historical divergences: entity-
- * adjacent spaces, NBSP handling, control whitespace, and parser-specific
- * text-node splitting.
+ * adjacent spaces, NBSP handling, control whitespace, parser-specific
+ * text-node splitting, and implicit-element tree construction.
  */
 
 const WRAP = (c: string) => `<!doctype html><html><head></head><body>${c}</body></html>`;
@@ -56,19 +55,23 @@ const CASES: string[] = [
 const TABLE_CASE = '<div><table><tr><td>c</td></tr></table></div>';
 
 describe('fast path vs DOM path consistency', () => {
-  it('produces identical canonical output across all regression cases (linkedom DOM)', () => {
-    // linkedom performs no spec-compliant tree construction, so it is still
-    // missing the implicit <tbody> that parse5 (and browsers) insert; the
-    // table case is covered against jsdom below instead.
-    for (const c of CASES) {
-      const full = WRAP(c);
-      const fast = canonicalizeString(full);
-      const { window } = parseHTML(full);
-      const slow = canonicalize(window.document.documentElement);
-      expect(slow.canonical, `linkedom: ${c}`).toBe(fast.canonical);
-      expect(slow.shape, `linkedom: ${c}`).toEqual(fast.shape);
-      expect(slow.tagCount).toBe(fast.tagCount);
-      expect(slow.depth).toBe(fast.depth);
+  it('produces identical canonical output via the Node parseInput fallback (no DOMParser)', async () => {
+    // Exercises the real plain-Node path: parse5 + Parse5Element adapter.
+    const original = (globalThis as any).DOMParser;
+    delete (globalThis as any).DOMParser;
+    try {
+      for (const c of [...CASES, TABLE_CASE]) {
+        const full = WRAP(c);
+        const fast = canonicalizeString(full);
+        const el = await parseInput(full);
+        const slow = canonicalize(el);
+        expect(slow.canonical, `fallback: ${c}`).toBe(fast.canonical);
+        expect(slow.shape, `fallback: ${c}`).toEqual(fast.shape);
+        expect(slow.tagCount).toBe(fast.tagCount);
+        expect(slow.depth).toBe(fast.depth);
+      }
+    } finally {
+      (globalThis as any).DOMParser = original;
     }
   });
 
@@ -118,7 +121,7 @@ describe('fast path vs DOM path consistency', () => {
 
   it('treats text split at entity boundaries as one logical text node', () => {
     const full = WRAP('<div>text&nbsp;more</div>');
-    const { window } = parseHTML(full);
+    const { window } = new JSDOM(full);
     const slow = canonicalize(window.document.documentElement);
     const fast = canonicalizeString(full);
     expect(slow.canonical).toBe(fast.canonical);

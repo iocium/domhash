@@ -1,4 +1,7 @@
 import { InputSource, DomHashOptions } from '../types';
+import { parse } from 'parse5';
+import { Parse5Element } from './parse5Element';
+import { DefaultTreeAdapterTypes } from 'parse5';
 
 /**
  * Parses a provided input (HTML string, URL, DOM, or Element) into a root Element.
@@ -87,12 +90,14 @@ async function parseHtml(html: string): Promise<Element> {
     if (!doc.documentElement) throw new Error('Failed to parse HTML');
     return doc.documentElement;
   }
-  // Fallback to LinkeDOM in Node.js; wrap snippet into full HTML document
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const linkedom = require('linkedom');
-  const wrapper = `<!doctype html><html><head></head><body>${html}</body></html>`;
-  const window = linkedom.parseHTML(wrapper);
-  const doc = window.document;
-  if (!doc || !doc.documentElement) throw new Error('Failed to parse HTML');
-  return doc.documentElement;
+  // Node.js fallback: parse5 implements the WHATWG HTML5 tree construction
+  // algorithm — the same algorithm browsers (and jsdom) use — so the tree
+  // (including implicit elements like <head> and <tbody>) is identical to
+  // what a browser DOMParser would produce, and snippets are wrapped into
+  // a full document by the tree construction itself. The result is exposed
+  // as a minimal DOM Element via Parse5Element.
+  const doc = parse(html);
+  const root = (doc.childNodes || []).find(n => (n as DefaultTreeAdapterTypes.Element).tagName === 'html');
+  if (!root) throw new Error('Failed to parse HTML');
+  return new Parse5Element(root as DefaultTreeAdapterTypes.Element) as unknown as Element;
 }
