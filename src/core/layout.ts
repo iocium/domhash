@@ -8,6 +8,46 @@ export interface LayoutFeature {
 }
 
 /**
+ * HTML default `display` values for common elements. Used as a fallback when
+ * getComputedStyle cannot resolve a value, for example for elements parsed by
+ * a DOMParser document that has no browsing context (jsdom 31+).
+ */
+const DEFAULT_DISPLAY: Record<string, string> = {
+  a: 'inline',
+  abbr: 'inline',
+  acronym: 'inline',
+  b: 'inline',
+  bdi: 'inline',
+  bdo: 'inline',
+  big: 'inline',
+  br: 'inline',
+  cite: 'inline',
+  code: 'inline',
+  dfn: 'inline',
+  em: 'inline',
+  i: 'inline',
+  img: 'inline',
+  input: 'inline-block',
+  kbd: 'inline',
+  label: 'inline',
+  mark: 'inline',
+  q: 'inline',
+  ruby: 'inline',
+  s: 'inline',
+  samp: 'inline',
+  small: 'inline',
+  span: 'inline',
+  strong: 'inline',
+  sub: 'inline',
+  sup: 'inline',
+  time: 'inline',
+  tt: 'inline',
+  u: 'inline',
+  var: 'inline',
+  wbr: 'inline',
+};
+
+/**
  * Parse an inline `style` attribute into a property map with lowercased
  * property names and trimmed values.
  */
@@ -111,7 +151,11 @@ export function extractLayoutFeatures(root: Element): LayoutFeature[] {
     } else if (typeof getComputedStyle === 'function') {
       try {
         const style = getComputedStyle(el);
-        display = style.display || display;
+        // An empty display value means the layout engine could not resolve the
+        // default for this element (e.g. a disconnected DOMParser node in
+        // jsdom 31+). Fall back to the tag's HTML default instead of assuming
+        // every element is a block.
+        display = style.display || DEFAULT_DISPLAY[tag] || display;
         visibility = style.visibility || visibility;
         opacity = style.opacity || opacity;
         position = style.position || position;
